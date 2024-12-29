@@ -3,7 +3,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
-const projectRoutes = require("./routes/projectRoutes");
+// const projectRoutes = require("./routes/projectRoutes");
 // const mailerRoutes = require("./routes/mailerRoutes");
 
 const authenticateToken = require("./middlewares/authenticationMiddleware");
@@ -34,7 +34,7 @@ app.use("/auth", authRoutes);
 
 app.use("/user", profileRoutes);
 
-app.use("/projects", projectRoutes);
+// app.use("/projects", projectRoutes);
 
 // app.use("/verification", mailerRoutes);
 
