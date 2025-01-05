@@ -79,12 +79,16 @@ module.exports.verifyEmail = async (req, res) => {
       return res.status(404).json({ messahe: "Invalid Verification Code" });
     }
 
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ message: "Invalid Verification Code" });
+    }
     user.isVerified = true;
     user.verificationCode = null;
     await user.save();
 
     res.status(200).json({ messsage: "Email verified Successfully" });
   } catch (error) {
+    console.error("Error verifying email",error)
     res.status(500).json({ message: "Internal Server error" });
   }
 };

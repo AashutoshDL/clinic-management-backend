@@ -1,11 +1,19 @@
 const mongoose = require("mongoose");
 
 const authSchema = new mongoose.Schema({
-  email: {
+  firstname: {
+    type: String,
+    required: true,
+  },
+  lastname: {
     type: String,
     required: true,
   },
   username: {
+    type: String,
+    required: true,
+  },
+  email: {
     type: String,
     required: true,
   },
@@ -21,6 +29,10 @@ const authSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  termsandconditions:{
+    type:Boolean,
+    required:true,
+  }
 });
 
 const Auth = mongoose.model("Auth", authSchema);
