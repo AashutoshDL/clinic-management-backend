@@ -1,15 +1,15 @@
 const mongoose = require("mongoose");
 
 const authSchema = new mongoose.Schema({
-  firstname: {
+  firstName: {
     type: String,
     required: true,
   },
-  lastname: {
+  lastName: {
     type: String,
     required: true,
   },
-  username: {
+  userName: {
     type: String,
     required: true,
   },
@@ -21,6 +21,10 @@ const authSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  confirmPassword: {
+    type: String,
+    required: false,
+  },
   verificationCode: {
     type: String,
     required: true,
@@ -29,7 +33,7 @@ const authSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  termsandconditions:{
+  acceptedTerms:{
     type:Boolean,
     required:true,
   }

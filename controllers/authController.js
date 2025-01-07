@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../services/emailService");
 
 module.exports.Register = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { firstName, lastName, userName, email, password, acceptedTerms } = req.body;
   try {
     //checking for existing user
     const existingUser = await Auth.findOne({ email });
@@ -19,11 +19,14 @@ module.exports.Register = async (req, res) => {
 
     const verificationCode = await sendVerificationEmail(email);
 
-    //creating a new user`
+    //creating a new user
     const newUser = new Auth({
-      username,
+      firstName,
+      lastName,
+      userName,
       email,
       password: hashedPassword,
+      acceptedTerms,
       verificationCode: verificationCode,
       verificationExpires: Date.now() + 3600000,
     });
@@ -36,6 +39,44 @@ module.exports.Register = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports.verifyEmail = async (req, res) => {
+  const { email, verificationCode } = req.body;
+
+  try {
+    // Check if the user exists
+    const user = await Auth.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: `We do not have information on ${email} you` });
+    }
+
+    // Check if the verification code matches
+    if (user.verificationCode !== verificationCode) {
+      // Schedule user deletion if the verification code is incorrect
+      setTimeout(async () => {
+        const userToDelete = await Auth.findOne({ email });
+        if (userToDelete && userToDelete.verificationCode !== verificationCode && !userToDelete.isVerified) {
+          await Auth.deleteOne({ email });
+          console.log(`User with email ${email} deleted due to invalid verification code.`);
+        }
+      }, 5 * 60 * 1000); // 5 minutes
+
+      return res.status(400).json({ message: "Invalid Verification Code. You have 5 minutes to try again." });
+    }
+
+    // Verify the user if the code matches
+    user.isVerified = true;
+    user.verificationCode = null; // Clear the verification code after successful verification
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully. You can now log in." });
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 
 const createTokens = (user) => {
   const accessToken = jwt.sign(
@@ -68,29 +109,6 @@ module.exports.VerifyCode = async (req, res) => {
     accessToken,
     refereshToken,
   });
-};
-
-module.exports.verifyEmail = async (req, res) => {
-  const { email, code } = req.body;
-
-  try {
-    const user = await Auth.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ messahe: "Invalid Verification Code" });
-    }
-
-    if (user.verificationCode !== code) {
-      return res.status(400).json({ message: "Invalid Verification Code" });
-    }
-    user.isVerified = true;
-    user.verificationCode = null;
-    await user.save();
-
-    res.status(200).json({ messsage: "Email verified Successfully" });
-  } catch (error) {
-    console.error("Error verifying email",error)
-    res.status(500).json({ message: "Internal Server error" });
-  }
 };
 
 module.exports.Login = async (req, res) => {
