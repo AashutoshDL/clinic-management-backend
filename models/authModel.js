@@ -27,15 +27,17 @@ const authSchema = new mongoose.Schema({
   },
   verificationCode: {
     type: String,
-    required: true,
   },
   verificationExpires: {
     type: Date,
-    required: true,
   },
   acceptedTerms:{
     type:Boolean,
     required:true,
+  },
+  role: {
+    type: String,
+    enum:['user','patient','doctor','lab-technician','admin','superadmin']
   }
 });
 

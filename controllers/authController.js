@@ -112,37 +112,46 @@ module.exports.VerifyCode = async (req, res) => {
 };
 
 module.exports.Login = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
+
   try {
-    // Find user by email
+    // Check if both email and role are provided
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+    // Find the user by email and role
     const user = await Auth.findOne({ email });
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "Invalid email or No user. Please register" });
+      return res.status(404).json({ message: "You are not registered.Please register." });
     }
 
-    // Compare passwords
+    if(role && user.role !== role){
+      user.role=role;
+      await user.save();
+    }
+
+    // Compare the provided password with the stored hashed password
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (!isPasswordCorrect) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    // If everything is correct, create token
-    const { accessToken, refereshToken } = createTokens(user);
+    // Create JWT tokens (access and refresh tokens)
+    const { accessToken, refreshToken } = createTokens(user);
 
-    res.cookie("accessToken", accessToken, { httpOnly: true, maxAge: 3600000 });
-    res.cookie("refreshToken", refereshToken, {
-      httpOnly: true,
-      maxAge: 604800000,
+    // Store tokens in HTTP-only cookies
+    res.cookie("accessToken", accessToken, { httpOnly: true, maxAge: 3600000 }); // 1 hour expiry for accessToken
+    res.cookie("refreshToken", refreshToken, { httpOnly: true, maxAge: 604800000 }); // 7 days expiry for refreshToken
+
+    // Send a success response with a message and tokens
+    return res.status(200).json({
+      message: "Logged In Successfully",
+      accessToken,
+      refreshToken,
+      user: { firstName: user.firstName, email: user.email, role : user.role },
     });
-
-    // Send the success response with token
-    return res
-      .status(200)
-      .json({ message: "Logged In", accessToken, refereshToken });
   } catch (error) {
-    console.error("Error Logging the user", error);
+    console.error("Error logging in the user", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
