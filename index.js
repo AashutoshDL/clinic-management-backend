@@ -25,7 +25,7 @@ const URL = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Password}@pms
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(URL);
+    await mongoose.connect(URL,{serverSelectionTimeoutMS: 5000});
     console.log("Database connected");
   } catch (error) {
     console.error("Error connecting to database:", error.message);

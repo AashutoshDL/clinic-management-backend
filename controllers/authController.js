@@ -1,11 +1,12 @@
 const Auth = require("../models/authModel");
+const dayjs = require('dayjs');
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { sendVerificationEmail } = require("../services/emailService");
 
 module.exports.Register = async (req, res) => {
-  const { firstName, lastName, userName, email, password, acceptedTerms } = req.body;
+  const { firstName, lastName, role, userName, email, password, acceptedTerms } = req.body;
   try {
     //checking for existing user
     const existingUser = await Auth.findOne({ email });
@@ -25,10 +26,12 @@ module.exports.Register = async (req, res) => {
       lastName,
       userName,
       email,
+      role,
       password: hashedPassword,
       acceptedTerms,
       verificationCode: verificationCode,
       verificationExpires: Date.now() + 3600000,
+      accountCreated: dayjs().format('MMMM D, YYYY h:mm A'),
     });
 
     await newUser.save();

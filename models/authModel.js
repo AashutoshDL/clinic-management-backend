@@ -38,6 +38,9 @@ const authSchema = new mongoose.Schema({
   role: {
     type: String,
     enum:['user','patient','doctor','lab-technician','admin','superadmin']
+  },
+  accountCreated:{
+    type:String,
   }
 });
 
