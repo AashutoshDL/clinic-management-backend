@@ -1,5 +1,6 @@
 const Auth = require("../models/authModel");
 
+//controls the profiles
 module.exports.Profile = async (req, res, next) => {
   try {
     const user = await Auth.findById(req.user.id);

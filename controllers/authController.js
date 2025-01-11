@@ -76,38 +76,44 @@ module.exports.verifyEmail = async (req, res) => {
   }
 };
 
-
-
 const createTokens = (user) => {
   const accessToken = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.JWT_Secret,
+    process.env.JWT_SECRET,
     { expiresIn: "5h" }
   );
 
-  const refereshToken = jwt.sign(
+  const refreshToken = jwt.sign(
     { id: user._id, email: user.email },
-    process.env.REFERESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "7d" }
   );
 
-  return { accessToken, refereshToken };
+  return { accessToken, refreshToken };
 };
 
 module.exports.VerifyCode = async (req, res) => {
   const { user } = req;
-  const { accessToken, refereshToken } = createTokens(user);
+  const { accessToken, refreshToken } = createTokens(user);
 
-  res.cookie("accessToken", accessToken, { httpOnly: true, maxAge: 3600000 });
-  res.cookie("refereshToken", refereshToken, {
+  res.cookie("accessToken", accessToken, { 
+    httpOnly: true, 
+    secure:false,
+    sameSite:"none",
+    maxAge: 3600000 
+  });
+
+  res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
+    secure:false,
+    sameSite:"none", 
     maxAge: 604800000,
   });
 
   res.status(200).json({
     message: "Verified Successfully",
     accessToken,
-    refereshToken,
+    refreshToken,
   });
 };
 
@@ -146,8 +152,8 @@ module.exports.Login = async (req, res) => {
     // Send a success response with a message and tokens
     return res.status(200).json({
       message: "Logged In Successfully",
-      accessToken,
-      refreshToken,
+      // accessToken,
+      // refreshToken,
       user: { firstName: user.firstName, email: user.email, role : user.role },
     });
   } catch (error) {

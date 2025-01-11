@@ -9,8 +9,15 @@ const authenticateToken = require("./middlewares/authenticationMiddleware");
 const mongoose = require("mongoose");
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin:"http://localhost:5173",
+  credentials: true, 
+}));
+
 app.use(express.json());
+
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
 require("dotenv").config();
 
@@ -27,7 +34,6 @@ const connectDB = async () => {
 };
 connectDB();
 
-//authentication routes
 app.use("/auth", authRoutes);
 
 app.use("/user", profileRoutes);
