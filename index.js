@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-
+    
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 
@@ -25,7 +25,7 @@ const URL = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Password}@pms
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(URL,{serverSelectionTimeoutMS: 5000});
+    await mongoose.connect(URL);
     console.log("Database connected");
   } catch (error) {
     console.error("Error connecting to database:", error.message);

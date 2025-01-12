@@ -29,10 +29,10 @@ module.exports.getAllUsers = async (req, res, next) => {
 
 // Delete user
 module.exports.deleteUser = async (req, res) => {
-  const { _id } = req.params; // Extract _id from URL parameter
+  const { id } = req.params; // Extract 'id' from URL parameter
 
   try {
-    const deletedUser = await Auth.findByIdAndDelete(_id); // Find and delete the user by _id
+    const deletedUser = await Auth.findByIdAndDelete(id); // Use 'id' to find and delete the user by _id
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -47,13 +47,13 @@ module.exports.deleteUser = async (req, res) => {
 
 // Edit (update) user
 module.exports.updateUser = async (req, res) => {
-  const { _id } = req.params; // Extract _id from URL parameter
+  const { id } = req.params; // Extract 'id' from URL parameter
   const { firstName, lastName, userName, email } = req.body; // Extract user details from the request body
 
   try {
     // Find the user by _id and update the relevant fields
     const updatedUser = await Auth.findByIdAndUpdate(
-      _id,
+      id,
       { firstName, lastName, userName, email },
       { new: true } // This returns the updated user object
     );
