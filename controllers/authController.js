@@ -157,7 +157,7 @@ module.exports.Login = async (req, res) => {
       message: "Logged In Successfully",
       // accessToken,
       // refreshToken,
-      user: { firstName: user.firstName, email: user.email, role : user.role },
+      user: { id: user.id,firstName: user.firstName, email: user.email, role : user.role },
     });
   } catch (error) {
     console.error("Error logging in the user", error);

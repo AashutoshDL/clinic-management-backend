@@ -38,9 +38,9 @@ connectDB();
 
 app.use("/auth",rateLimiter, authRoutes);``
 
-app.use("/user", rateLimiter,profileRoutes);
+app.use("/user", rateLimiter, profileRoutes);
 
-app.use('/reminder',emailReminderRoutes)
+app.use('/reminder', emailReminderRoutes)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

@@ -1,6 +1,36 @@
 const Auth = require("../models/authModel");
 
-// Fetch all users
+// Fetch user
+module.exports.getUserById = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Extract user ID from request parameters
+
+    // Find user by ID
+    const user = await Auth.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Respond with user data
+    res.status(200).json({
+      message: "User fetched successfully",
+      user: {
+        id: user._id, // User ID
+        email: user.email,
+        userName: user.userName,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        accountCreated: user.accountCreated || null,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 module.exports.getAllUsers = async (req, res, next) => {
   try {
     const users = await Auth.find(); // Fetch all users from the database
