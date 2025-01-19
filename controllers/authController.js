@@ -164,3 +164,12 @@ module.exports.Login = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+module.exports.Logout = async (req, res) => {
+  // Clear the 'accessToken' and 'refreshToken' cookies from the client
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+
+  // Respond with a success message
+  res.status(200).json({ message: "Logged out successfully" });
+};
