@@ -3,8 +3,10 @@ const cors = require("cors");
     
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const emailReminderRoutes = require('./routes/emailReminderRoutes');
 
-const authenticateToken = require("./middlewares/authenticationMiddleware");
+// const authenticateToken = require("./middlewares/authenticationMiddleware");
+const rateLimiter=require('./middlewares/rateLimiterMiddleware');
 
 const mongoose = require("mongoose");
 const app = express();
@@ -34,9 +36,11 @@ const connectDB = async () => {
 };
 connectDB();
 
-app.use("/auth", authRoutes);
+app.use("/auth",rateLimiter, authRoutes);``
 
-app.use("/user", profileRoutes);
+app.use("/user", rateLimiter, profileRoutes);
+
+app.use('/reminder', emailReminderRoutes)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

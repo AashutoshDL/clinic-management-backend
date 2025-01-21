@@ -157,10 +157,19 @@ module.exports.Login = async (req, res) => {
       message: "Logged In Successfully",
       // accessToken,
       // refreshToken,
-      user: { firstName: user.firstName, email: user.email, role : user.role },
+      user: { id: user.id,firstName: user.firstName, email: user.email, role : user.role },
     });
   } catch (error) {
     console.error("Error logging in the user", error);
     return res.status(500).json({ message: "Internal server error" });
   }
+};
+
+module.exports.Logout = async (req, res) => {
+  // Clear the 'accessToken' and 'refreshToken' cookies from the client
+  res.clearCookie('accessToken');
+  res.clearCookie('refreshToken');
+
+  // Respond with a success message
+  res.status(200).json({ message: "Logged out successfully" });
 };

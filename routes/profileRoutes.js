@@ -1,14 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { Profile, getAllUsers, deleteUser, updateUser } = require("../controllers/profileController");
-// const {
-//   authenticateToken,
-// } = require("../middlewares/authenticationMiddleware");
+const { getAllUsers, deleteUser, updateUser, getUserById } = require("../controllers/profileController");
 
 router.get("/profiles", getAllUsers);
 
-router.delete("/profiles/:id",deleteUser);
+router.get('/profile/:id',getUserById);
 
-router.put('/profiles/:id',updateUser)
+router.delete("/deleteProfiles/:id",deleteUser);
+
+router.put('/updateProfiles/:id',updateUser)
 
 module.exports = router;
