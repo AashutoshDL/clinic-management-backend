@@ -1,36 +1,67 @@
+const schedule = require('node-schedule'); // Import node-schedule
 const nodemailer = require('nodemailer');
-const cron = require('node-cron'); // Import node-cron
-const dayjs = require('dayjs'); // For time comparison
 
-module.exports.reminderService = async (email, reminderMessage, reminderTime) => {
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD, // Use environment variables for security
+  },
+});
+
+/**
+ * Schedule and send a daily reminder email.
+ * @param {string} email - The recipient's email address.
+ * @param {string} reminderMessage - The reminder message to be sent.
+ * @param {string} reminderTime - The time in HH:mm format.
+ */
+const reminderService = async (email, reminderMessage, reminderTime) => {
   if (!email || !reminderMessage || !reminderTime) {
     throw new Error("Email, reminder message, and reminder time are required");
   }
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
+  const [hour, minute] = reminderTime.trim().split(':')
 
-  const mailOptions = {
-    from: process.env.EMAIL,
-    to: email,
-    subject: 'Daily Reminder',
-    text: `Reminder Message: ${reminderMessage}`,
-    html: `<h2>${reminderMessage}</h2>`,
-  };
+    if(
+      isNaN(hour) || isNaN(minute) ||  hour < 0 || 
+      hour > 23 || 
+      minute < 0 || 
+      minute > 59
+    ) {
+      console.log("Hour",hour)
+      console.log("Minute",minute)
+      throw new Error('Invalid reminder time format.');
+    }
 
-  // Use node-cron to schedule the task daily at the specified time
-  cron.schedule(`0 ${reminderTime.split(':')[1]} ${reminderTime.split(':')[0]} * * *`, async () => {
+
+  // Schedule the daily email
+  schedule.scheduleJob(`${minute} ${hour} * * *`, async () => {
     try {
-      // Send email at the specified time every day
-      await transporter.sendMail(mailOptions);
-      console.log(`Reminder sent to ${email} at ${reminderTime}`);
+      // Send the email
+      await transporter.sendMail({
+        from: process.env.EMAIL,
+        to: email,
+        subject: 'Daily Reminder',
+        text: `Reminder Message: ${reminderMessage}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+            <h2>Your Daily Reminder</h2>
+            <p>${reminderMessage}</p>
+            <small>This reminder was scheduled for ${reminderTime}.</small>
+          </div>
+        `,
+      });
+      console.log(`Daily reminder email sent to ${email} at ${reminderTime}`);
     } catch (error) {
-      console.error("Error sending the reminder:", error);
+      console.error("Error sending email:", error.message);
     }
   });
+
+  console.log(`Email reminder scheduled for ${email} at ${reminderTime}`);
+};
+
+// Export the reminderService function using module.exports
+module.exports = {
+  reminderService,
 };
