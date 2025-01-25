@@ -4,6 +4,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const emailReminderRoutes = require('./routes/emailReminderRoutes');
+const doctorRoutes=require("./routes/doctorRoutes");
 
 // const authenticateToken = require("./middlewares/authenticationMiddleware");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
@@ -36,11 +37,14 @@ const connectDB = async () => {
 };
 connectDB();
 
-app.use("/auth",rateLimiter, authRoutes);``
+app.use("/auth",rateLimiter, authRoutes);
 
 app.use("/user", rateLimiter, profileRoutes);
 
+app.use('/doctor',doctorRoutes);
+
 app.use('/reminder', emailReminderRoutes)
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
