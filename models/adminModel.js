@@ -1,15 +1,11 @@
 const mongoose = require("mongoose");
 
-const patientSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  userName: {
-    type: String,
-    required: true,
-  },
+const adminSchema = new mongoose.Schema({
   email: {
+    type: String,
+    required: true,
+  },
+  password: {
     type: String,
     required: true,
   },
@@ -22,6 +18,6 @@ const patientSchema = new mongoose.Schema({
   }
 });
 
-const Patient = mongoose.model("Patient", patientSchema);
+const Admin = mongoose.model("Admin", adminSchema);
 
-module.exports = Patient;
+module.exports = Admin;

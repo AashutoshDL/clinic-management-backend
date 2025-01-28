@@ -1,11 +1,11 @@
-const Auth = require("../models/authModel");
+const Patient = require("../models/patientModel");
 
 module.exports.verifyCode = async (req, res, next) => {
   const { email, code } = req.body;
 
   try {
     // Find user by email
-    const user = await Auth.findOne({ email });
+    const user = await Patient.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "No user found with that email" });
     }

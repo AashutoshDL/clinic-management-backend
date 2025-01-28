@@ -1,5 +1,5 @@
 const { reminderService } = require('../services/reminderService'); // Import email service
-const Auth = require('../models/authModel');
+const User = require('../models/userModel');
 const EmailReminder = require('../models/reminderModel');
 const schedule = require('node-schedule'); // Import node-schedule for scheduling jobs
 
@@ -32,7 +32,7 @@ module.exports.EmailReminder = async (req, res) => {
   }
 
   try {
-    const user = await Auth.findById(id);
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -51,6 +51,10 @@ module.exports.EmailReminder = async (req, res) => {
       await reminderService(user.email, reminderMessage);
     });
 
+    // Store the job ID in the database for later cancellation
+    newEmailReminder.jobId = reminderJob.id;
+    await newEmailReminder.save();
+
     return res.status(200).json({ message: 'Daily reminder email scheduled successfully.' });
   } catch (error) {
     console.error('Error setting reminder:', error);
@@ -64,18 +68,26 @@ module.exports.cancelReminder = async (req, res) => {
   const { reminderTime, reminderMessage } = req.body;  // Get reminder details from the request body
 
   try {
-    // Find and remove the reminder from the database using userId, reminderTime, and reminderMessage
-    const reminder = await EmailReminder.findOneAndDelete({
+    // Find the reminder in the database using userId, reminderTime, and reminderMessage
+    const reminder = await EmailReminder.findOne({
       userId: id,
       reminderTime,
       reminderMessage
     });
 
     if (!reminder) {
-      return res.status(404).json({ message: 'Reminder not found or already cancelled' });
+      return res.status(404).json({ message: 'Reminder not found or already cancelled.' });
     }
 
-    // If reminder found and deleted, return success message
+    // If the reminder is found, cancel the scheduled job
+    if (schedule.scheduledJobs[reminder.jobId]) {
+      schedule.scheduledJobs[reminder.jobId].cancel();
+      console.log(`Reminder job with ID ${reminder.jobId} has been cancelled.`);
+    }
+
+    // Remove the reminder from the database
+    await EmailReminder.findByIdAndDelete(reminder._id);
+
     return res.status(200).json({ message: 'Reminder cancelled successfully' });
   } catch (error) {
     console.error('Error canceling reminder:', error);

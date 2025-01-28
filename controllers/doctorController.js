@@ -49,8 +49,7 @@ module.exports.getAllDoctors = async (req, res, next) => {
       doctors: doctors.map((doctor) => ({
         id: doctor._id,
         userName: doctor.userName,
-        firstName: doctor.firstName,
-        lastName: doctor.lastName,
+        name:doctor.name,
         email: doctor.email,
         role: doctor.role,
         specialization: doctor.specialization || null,
@@ -107,8 +106,7 @@ module.exports.updateDoctor = async (req, res) => {
       doctor: {
         id: updatedDoctor._id,
         userName: updatedDoctor.userName,
-        firstName: updatedDoctor.firstName,
-        lastName: updatedDoctor.lastName,
+        name:updatedDoctor.name,
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
@@ -147,8 +145,7 @@ module.exports.editProfile = async (req, res) => {
       doctor: {
         id: updatedDoctor._id,
         userName: updatedDoctor.userName,
-        firstName: updatedDoctor.firstName,
-        lastName: updatedDoctor.lastName,
+        name:updatedDoctor.name,
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
