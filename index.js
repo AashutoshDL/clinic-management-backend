@@ -9,6 +9,7 @@ const patientRoutes=require("./routes/patientRoutes")
 
 const {authenticateToken} = require("./middlewares/authenticationMiddleware");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
+const {me} = require('./controllers/authController')
 
 const mongoose = require("mongoose");
 const app = express();
@@ -38,7 +39,12 @@ const connectDB = async () => {
 };
 connectDB();
 
-app.use("/auth", authenticateToken, authRoutes);
+app.get('/me',authenticateToken, (req,res)=>{
+  const {id,role}=req.user;
+  res.json({id,role});
+})
+
+app.use("/auth", authRoutes);
 
 app.use("/user", profileRoutes);
 
@@ -46,7 +52,7 @@ app.use('/doctor',doctorRoutes);
 
 app.use('/reminder', emailReminderRoutes)
 
-app.use('/patient',patientRoutes)
+app.use('/patient', patientRoutes)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

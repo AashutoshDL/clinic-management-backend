@@ -3,23 +3,16 @@ const mongoose = require('mongoose');
 const doctorSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
-    trim: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
+    required: false,
     trim: true,
   },
   email: {
     type: String,
     required: true,
   },
-  phoneNumber: {
-    type: String,
-    required: true,
-    unique: true, // Unique phone number for each doctor
-    trim: true,
+  password:{
+    type:String,
+    required:true,
   },
   role: {
     type: String,
@@ -28,8 +21,7 @@ const doctorSchema = new mongoose.Schema({
   },
   specialization: {
     type: String,
-    required: true,
-    trim: true,
+    trim: false,
   },
   info: {
     type: String,
@@ -82,7 +74,7 @@ const doctorSchema = new mongoose.Schema({
       type: Number,
       min: 1,
       max: 5,
-      required: true,
+      required: false,
     },
     comment: {
       type: String,
@@ -98,16 +90,16 @@ const doctorSchema = new mongoose.Schema({
   },
   isAvailable: {
     type: Boolean,
-    default: true, // By default, the doctor is available
+    default: false, // By default, the doctor is available
   },
   availability: [{
     date: {
       type: Date,
-      required: true,
+      required: false,
     },
     times: {
       type: [String], // Times available on this specific date
-      required: true,
+      required: false,
     },
   }],
 }, {

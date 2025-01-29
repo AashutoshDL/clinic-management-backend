@@ -9,6 +9,5 @@ router.post("/login", Login);
 router.post("/verifyEmail",verifyEmail);
 router.post('/refreshToken',refreshToken)
 router.post('/logout',Logout)
-router.get('/me',me);
 
 module.exports = router;

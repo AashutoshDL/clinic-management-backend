@@ -4,14 +4,12 @@ const Patient = require("../models/patientModel");
 module.exports.getPatientById = async (req, res, next) => {
   try {
     const { id } = req.params; // Extract doctor ID from request parameters
-
     // Find doctor by ID
     const patient = await Patient.findById(id);
 
-    if (!doctor) {
+    if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
-
     // Respond with doctor data
     res.status(200).json({
       message: "Patient fetched successfully",

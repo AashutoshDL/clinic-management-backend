@@ -149,7 +149,7 @@
     }
   
     try {
-      // Check if the email exists in the User collection
+      // Check if the user exists
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(404).json({ message: "No user found with this email." });
@@ -161,73 +161,86 @@
         return res.status(400).json({ message: "Invalid password." });
       }
   
-      // Check if the role exists in the user's roles array
-      if (!user.role.includes(role)) {
-        // If role doesn't exist, create a new user with the specified role
+      // Helper function to create the role if it doesn't exist
+      const createRoleIfNotExist = async (role, user) => {
+        let roleInstance;
         if (role === "doctor") {
-          let doctor = await Doctor.findOne({ email });
-          if (!doctor) {
-            doctor = new Doctor({
-              name:user.name,
+          roleInstance = await Doctor.findOne({ email });
+          if (!roleInstance) {
+            roleInstance = new Doctor({
+              name: user.name,
               userName: user.userName,
-              firstName: user.firstName,
-              lastName: user.lastName,
+              password:user.password,
               email: user.email,
-              role:role,
+              role: role,
             });
-            await doctor.save();
+            await roleInstance.save();
           }
         } else if (role === "patient") {
-          let patient = await Patient.findOne({ email });
-          if (!patient) {
-            patient = new Patient({
-              name:user.name,
+          roleInstance = await Patient.findOne({ email });
+          if (!roleInstance) {
+            roleInstance = new Patient({
+              name: user.name,
               userName: user.userName,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              email: user.email,
-              role:role,
-            });
-            await patient.save();
-          }
-        } else if(role==="admin"){
-          let admin=await Admin.findOne({email});
-          if(!admin){
-            admin=new Admin({
-                email:user.email,
               password:user.password,
-              role:role,
-            })
+              email: user.email,
+              role: role,
+            });
+            await roleInstance.save();
           }
-        }else {
-          return res.status(400).json({ message: "Invalid role." });
+        } else if (role === "admin") {
+          roleInstance = await Admin.findOne({ email });
+          if (!roleInstance) {
+            roleInstance = new Admin({
+              email: user.email,
+              password: user.password,
+              role: role,
+            });
+            await roleInstance.save();
+          }
+        } else {
+          throw new Error("Invalid role.");
         }
+        return roleInstance;
+      };
   
-        // Add the new role to the user's roles array and save the user
+      // Create role if it doesn't exist
+      let roleInstance = await createRoleIfNotExist(role, user);
+  
+      // Add the new role to the user's roles array and save
+      if (!user.role.includes(role)) {
         user.role.push(role);
         await user.save();
       }
   
-      // Generate tokens
-      const { accessToken, refreshToken } = createTokens(user);
-
+      // Generate JWT tokens with roleInstance ID instead of user ID
+      const { accessToken, refreshToken } = createTokens({
+        _id: roleInstance._id, // Use the ID of the logged-in role instance
+        email: user.email,
+        role: roleInstance.role, // Use role-specific info
+      });
+  
+      // Set tokens in cookies
       setTokensInCookies(res, accessToken, refreshToken);
   
       // Respond with success message and user details
       return res.status(200).json({
         message: `Logged In Successfully as ${role.charAt(0).toUpperCase() + role.slice(1)}`,
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          roles: user.role,
+          id: roleInstance._id, // Send the correct object ID based on the role
+          name: roleInstance.name,
+          email: roleInstance.email,
+          roles: roleInstance.role,
         },
-      }); 
+      });
+  
     } catch (error) {
       console.error("Error logging in user:", error);
       res.status(500).json({ message: "Internal Server Error" });
     }
   };
+  
+  
   
 
   module.exports.Logout = async (req, res) => {
@@ -237,7 +250,3 @@
   };
 
   
-module.exports.me = async(req,res)=>{
-  const {id,role}=req.user;
-  res.json({id,role});
-}

@@ -18,8 +18,7 @@ module.exports.getDoctorById = async (req, res, next) => {
       doctor: {
         id: doctor._id,
         userName: doctor.userName,
-        firstName: doctor.firstName,
-        lastName: doctor.lastName,
+        name:doctor.name,
         email: doctor.email,
         role: doctor.role,
         specialization: doctor.specialization || null,
@@ -86,13 +85,13 @@ module.exports.deleteDoctor = async (req, res) => {
 // Edit (update) doctor
 module.exports.updateDoctor = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
-  const { firstName, lastName, userName, email, role, specialization, info, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
+  const { name, userName, email, role, specialization, info, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
 
   try {
     // Find the doctor by _id and update the relevant fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { firstName, lastName, userName, email, role, specialization, info, dutyTime, availableTimes },
+      { name, userName, email, role, specialization, info, dutyTime, availableTimes },
       { new: true } // This returns the updated doctor object
     );
 
