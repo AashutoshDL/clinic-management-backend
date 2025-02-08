@@ -5,7 +5,7 @@ const {getDoctorById,getAllDoctors, deleteDoctor, editProfile}= require("../cont
 
 // Route to set a reminder (schedules daily reminder)
 router.get('/getDoctorById/:id', getDoctorById);
-router.get('/getAllDoctors/:id', getAllDoctors);
+router.get('/getAllDoctors', getAllDoctors);
 router.post('/deleteDoctors/:id',deleteDoctor );
 router.post('/editProfile/:id',editProfile)
 

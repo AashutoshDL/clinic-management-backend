@@ -22,9 +22,9 @@ module.exports.getDoctorById = async (req, res, next) => {
         email: doctor.email,
         role: doctor.role,
         specialization: doctor.specialization || null,
-        info: doctor.info || null,
+        information: doctor.information || null,
         dutyTime: doctor.dutyTime || null,
-        availableTimes: doctor.availableTimes || [],
+        availableTimes: doctor.availableTimes || null,
         accountCreated: doctor.accountCreated || null,
       },
     });
@@ -52,9 +52,9 @@ module.exports.getAllDoctors = async (req, res, next) => {
         email: doctor.email,
         role: doctor.role,
         specialization: doctor.specialization || null,
-        info: doctor.info || null,
+        information: doctor.information || null,
         dutyTime: doctor.dutyTime || null,
-        availableTimes: doctor.availableTimes || [],
+        availableTimes: doctor.availableTimes || null,
         accountCreated: doctor.accountCreated || null,
       })),
     });
@@ -85,13 +85,13 @@ module.exports.deleteDoctor = async (req, res) => {
 // Edit (update) doctor
 module.exports.updateDoctor = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
-  const { name, userName, email, role, specialization, info, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
+  const { name, userName, email, role, specialization, information, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
 
   try {
     // Find the doctor by _id and update the relevant fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { name, userName, email, role, specialization, info, dutyTime, availableTimes },
+      { name, userName, email, role, specialization, information, dutyTime, availableTimes },
       { new: true } // This returns the updated doctor object
     );
 
@@ -109,9 +109,9 @@ module.exports.updateDoctor = async (req, res) => {
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
-        info: updatedDoctor.info || null,
+        information: updatedDoctor.information || null,
         dutyTime: updatedDoctor.dutyTime || null,
-        availableTimes: updatedDoctor.availableTimes || [],
+        availableTimes: updatedDoctor.availableTimes || null,
         accountCreated: updatedDoctor.accountCreated || null,
       },
     });
@@ -124,13 +124,13 @@ module.exports.updateDoctor = async (req, res) => {
 // Edit (update) doctor profile (specialization, description, and duty time)
 module.exports.editProfile = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
-  const { specialization, info, dutyTime } = req.body; // Extract specialization, description (info), and dutyTime from the request body
+  const { specialization, information, dutyTime,availableTimes } = req.body; // Extract specialization, description (info), and dutyTime from the request body
 
   try {
     // Find the doctor by _id and update the relevant fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { specialization, info, dutyTime }, // Only update the specialization, info (description), and dutyTime
+      { specialization, information, dutyTime, availableTimes }, // Only update the specialization, info (description), and dutyTime
       { new: true } // This returns the updated doctor object
     );
 
@@ -148,9 +148,9 @@ module.exports.editProfile = async (req, res) => {
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
-        info: updatedDoctor.info || null,
+        information: updatedDoctor.information || null,
         dutyTime: updatedDoctor.dutyTime || null,
-        availableTimes: updatedDoctor.availableTimes || [],
+        availableTimes: updatedDoctor.availableTimes || null,
         accountCreated: updatedDoctor.accountCreated || null,
       },
     });
