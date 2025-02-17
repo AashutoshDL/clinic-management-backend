@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: [String],
-    enum:['user','patient','doctor','lab-technician','admin','superadmin']
+    enum:['user','patient','doctor','lab-technician','admin']
   },
   accountCreated:{
     type:String,
