@@ -5,9 +5,11 @@ const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const emailReminderRoutes = require('./routes/emailReminderRoutes');
 const doctorRoutes=require("./routes/doctorRoutes");
+const patientRoutes=require("./routes/patientRoutes")
 
-// const authenticateToken = require("./middlewares/authenticationMiddleware");
+const {authenticateToken} = require("./middlewares/authenticationMiddleware");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
+const {me} = require('./controllers/authController')
 
 const mongoose = require("mongoose");
 const app = express();
@@ -37,14 +39,20 @@ const connectDB = async () => {
 };
 connectDB();
 
-app.use("/auth",rateLimiter, authRoutes);
+app.get('/me',authenticateToken, (req,res)=>{
+  const {id,role}=req.user;
+  res.json({id,role});
+})
 
-app.use("/user", rateLimiter, profileRoutes);
+app.use("/auth", authRoutes);
+
+app.use("/user", profileRoutes);
 
 app.use('/doctor',doctorRoutes);
 
 app.use('/reminder', emailReminderRoutes)
 
+app.use('/patient', patientRoutes)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

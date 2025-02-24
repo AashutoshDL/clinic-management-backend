@@ -1,4 +1,4 @@
-const Auth = require("../models/authModel");
+const User = require("../models/userModel");
 
 // Fetch user
 module.exports.getUserById = async (req, res, next) => {
@@ -6,7 +6,7 @@ module.exports.getUserById = async (req, res, next) => {
     const { id } = req.params; // Extract user ID from request parameters
 
     // Find user by ID
-    const user = await Auth.findById(id);
+    const user = await User.findById(id);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -19,8 +19,7 @@ module.exports.getUserById = async (req, res, next) => {
         id: user._id, // User ID
         email: user.email,
         userName: user.userName,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name:user.name,
         role: user.role,
         accountCreated: user.accountCreated || null,
       },
@@ -33,7 +32,7 @@ module.exports.getUserById = async (req, res, next) => {
 
 module.exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await Auth.find(); // Fetch all users from the database
+    const users = await User.find(); // Fetch all users from the database
 
     if (!users || users.length === 0) {
       return res.status(404).json({ message: "No users found" });
@@ -45,8 +44,7 @@ module.exports.getAllUsers = async (req, res, next) => {
         id: user._id, // Using _id to map user identifier
         email: user.email,
         userName: user.userName,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name:user.name,
         role: user.role,
         accountCreated: user.accountCreated || null, // Add creation date if your schema has it
       })),
@@ -62,7 +60,7 @@ module.exports.deleteUser = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
 
   try {
-    const deletedUser = await Auth.findByIdAndDelete(id); // Use 'id' to find and delete the user by _id
+    const deletedUser = await User.findByIdAndDelete(id); // Use 'id' to find and delete the user by _id
 
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -82,7 +80,7 @@ module.exports.updateUser = async (req, res) => {
 
   try {
     // Find the user by _id and update the relevant fields
-    const updatedUser = await Auth.findByIdAndUpdate(
+    const updatedUser = await User.findByIdAndUpdate(
       id,
       { firstName, lastName, userName, email },
       { new: true } // This returns the updated user object
@@ -99,8 +97,7 @@ module.exports.updateUser = async (req, res) => {
         id: updatedUser._id,  // Using _id to return the user
         email: updatedUser.email,
         userName: updatedUser.userName,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
+        name:updatedUser.name,
         role: updatedUser.role,
         accountCreated: updatedUser.accountCreated || null,
       },

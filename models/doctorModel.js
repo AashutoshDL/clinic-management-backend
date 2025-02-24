@@ -1,34 +1,27 @@
 const mongoose = require('mongoose');
 
 const doctorSchema = new mongoose.Schema({
-  userName: {
+  name: {
     type: String,
-    required: true,
-    trim: true,
-  },
-  firstName: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  lastName: {
-    type: String,
-    required: true,
+    required: false,
     trim: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true, // Ensure the email is unique
   },
-  role:{
+  password:{
     type:String,
     required:true,
   },
+  role: {
+    type: String,
+    required: true,
+    enum: ['doctor', 'admin', 'lab-technician'], // Limiting roles to a list
+  },
   specialization: {
     type: String,
-    required: false,
-    trim: true,
+    trim: false,
   },
   info: {
     type: String,
@@ -46,12 +39,71 @@ const doctorSchema = new mongoose.Schema({
     },
   },
   availableTimes: {
-    type: [String], // Array of strings representing available times (e.g. "9:00 AM", "11:00 AM")
+    type: [String], // Array of strings representing available times (e.g., "9:00 AM", "11:00 AM")
     required: false,
   },
-  accountCreated:{
-    type:String,
-  }
+  profilePicture: {
+    type: String, // URL or path to doctor's profile image
+    required: false,
+  },
+  experience: {
+    type: String, // Doctor's years of experience or specific expertise
+    required: false,
+  },
+  qualifications: {
+    type: [String], // List of qualifications or degrees the doctor has
+    required: false,
+  },
+  clinic: {
+    name: {
+      type: String,
+      required: false,
+    },
+    address: {
+      type: String,
+      required: false,
+    },
+    contactNumber: {
+      type: String,
+      required: false,
+    },
+  },
+  reviews: [{
+    patientName: String,
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      required: false,
+    },
+    comment: {
+      type: String,
+      required: false,
+    },
+    reviewDate: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
+  accountCreated: {
+    type: String,
+  },
+  isAvailable: {
+    type: Boolean,
+    default: false, // By default, the doctor is available
+  },
+  availability: [{
+    date: {
+      type: Date,
+      required: false,
+    },
+    times: {
+      type: [String], // Times available on this specific date
+      required: false,
+    },
+  }],
+}, {
+  timestamps: true, // Automatically add createdAt and updatedAt fields
 });
 
 const Doctor = mongoose.model('Doctor', doctorSchema);
