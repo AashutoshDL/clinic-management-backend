@@ -7,6 +7,7 @@
   const Patient = require("../models/patientModel");
   const Admin = require("../models/adminModel");
   const User = require("../models/userModel");
+  const Superadmin=require("../models/superAdminModel")
 
   const SALT_ROUNDS = 10;
 
@@ -25,7 +26,6 @@
   
     return { accessToken, refreshToken };
   };
-  
 
   const setTokensInCookies = (res, accessToken, refreshToken) => {
     res.cookie("accessToken", accessToken, {
@@ -143,7 +143,6 @@
     }
   };
   
-
   module.exports.Login = async (req, res) => {
     const { email, password, role } = req.body;
   
@@ -153,29 +152,31 @@
   
     try {
       // Check if the provided credentials match the superadmin
-      if (email === process.env.SUPERADMIN_EMAIL) {
-        const adminPassword = process.env.SUPERADMIN_PASSWORD_HASH;
+      const superadmin = await Superadmin.findOne({ email }); // Assuming there's a Superadmin model
+      if (superadmin) {
+        const isSuperadminPasswordCorrect = await bcrypt.compare(password, superadmin.password);
   
         if (isSuperadminPasswordCorrect) {
-          const superadminData = {
+          // If superadmin login is successful, set the role as an array with superadmin
+          const userData = {
             email,
-
-            role: "superadmin",
+            password,
+            role: ["superadmin"], // Set the role to superadmin if login is successful
           };
   
-          const { accessToken, refreshToken } = createTokens(superadminData);
+          const { accessToken, refreshToken } = createTokens(userData);
           setTokensInCookies(res, accessToken, refreshToken);
   
           return res.status(200).json({
             message: "Logged In Successfully as Superadmin",
-            user: superadminData,
+            user: userData,
           });
         } else {
           return res.status(400).json({ message: "Invalid password." });
         }
       }
   
-      // Check if the user exists
+      // Check if the user exists as a normal user
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(404).json({ message: "No user found with this email." });
@@ -185,6 +186,14 @@
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         return res.status(400).json({ message: "Invalid password." });
+      }
+  
+      // Check if the user is a superadmin, and if so, add 'superadmin' to their roles array
+      if (superadmin) {
+        if (!user.role.includes("superadmin")) {
+          user.role.push("superadmin");
+          await user.save(); // Save updated role array
+        }
       }
   
       // Helper function to create the role if it doesn't exist
@@ -233,12 +242,6 @@
       // Create role if it doesn't exist
       let roleInstance = await createRoleIfNotExist(role, user);
   
-      // Add the new role to the user's roles array and save
-      if (!user.role.includes(role)) {
-        user.role.push(role);
-        await user.save();
-      }
-  
       // Generate JWT tokens with roleInstance ID instead of user ID
       const { accessToken, refreshToken } = createTokens({
         _id: roleInstance._id, // Use the ID of the logged-in role instance
@@ -256,7 +259,7 @@
           id: roleInstance._id, // Send the correct object ID based on the role
           name: roleInstance.name,
           email: roleInstance.email,
-          roles: roleInstance.role,
+          roles: roleInstance.role, // Return the updated roles array
         },
       });
   
@@ -268,8 +271,6 @@
   
   
   
-  
-
   module.exports.Logout = async (req, res) => {
     res.clearCookie("accessToken", { httpOnly: true, secure: false, sameSite: "lax" });
     res.clearCookie("refreshToken", { httpOnly: true, secure: false, sameSite: "lax" });
