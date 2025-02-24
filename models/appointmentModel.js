@@ -1,29 +1,40 @@
-// const mongoose = require('mongoose');
+// models/appointmentModel.js
 
-// const appointmentSchema = new mongoose.Schema(
-//   {
-//     doctor: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: 'User', // Assuming User model has doctor and patient roles
-//       required: true,
-//     },
-//     patient: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: 'User',
-//       required: true,
-//     },
-//     appointmentDate: {
-//       type: Date,
-//       required: true,
-//     },
-//     status: {
-//       type: String,
-//       enum: ['Scheduled', 'Completed', 'Cancelled'],
-//       default: 'Scheduled',
-//     },
-//   },
-//   { timestamps: true }
-// );
+const mongoose = require('mongoose');
 
-// const Appointment = mongoose.model('Appointment', appointmentSchema);
-// module.exports = Appointment;
+const appointmentSchema = new mongoose.Schema({
+  doctorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Assuming the doctor is also stored in the 'User' model
+    required: true,
+  },
+  doctorName: {
+    type: String,
+    required: true,
+  },
+  patientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // Assuming the patient is also stored in the 'User' model
+    required: true,
+  },
+  patientName: {
+    type: String,
+    required: true,
+  },
+  time: {
+    type: String, // Store the selected time as a string (e.g., "10:00 AM - 11:00 AM")
+    required: true,
+  },
+  status: {
+    type: String,
+    default: 'Scheduled', // Default status is 'Scheduled'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const Appointment = mongoose.model('Appointment', appointmentSchema);
+
+module.exports = Appointment;

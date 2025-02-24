@@ -121,25 +121,28 @@
   };
 
 
-  module.exports.refreshToken = async(req,res)=>{
+  module.exports.refreshToken = async (req, res) => {
+    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  
     if (!refreshToken) {
       return res.status(400).json({ message: 'Refresh token is required' });
     }
   
     try {
+      // Verify the refresh token and extract user information
       const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-      const newAccessToken = jwt.sign(
-        { id: payload.id, name: payload.name },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '15m' }
-      );
   
-      res.json({ accessToken: newAccessToken });
+      // Create new tokens
+      const { accessToken, refreshToken: newRefreshToken } = createTokens(payload);
+  
+      // Send the new access token and refresh token to the client
+      res.json({ accessToken, refreshToken: newRefreshToken });
     } catch (error) {
       console.error('Invalid refresh token:', error.message);
       res.status(401).json({ message: 'Invalid refresh token' });
     }
-  }
+  };
+  
 
   module.exports.Login = async (req, res) => {
     const { email, password, role } = req.body;
@@ -149,6 +152,29 @@
     }
   
     try {
+      // Check if the provided credentials match the superadmin
+      if (email === process.env.SUPERADMIN_EMAIL) {
+        const adminPassword = process.env.SUPERADMIN_PASSWORD_HASH;
+  
+        if (isSuperadminPasswordCorrect) {
+          const superadminData = {
+            email,
+
+            role: "superadmin",
+          };
+  
+          const { accessToken, refreshToken } = createTokens(superadminData);
+          setTokensInCookies(res, accessToken, refreshToken);
+  
+          return res.status(200).json({
+            message: "Logged In Successfully as Superadmin",
+            user: superadminData,
+          });
+        } else {
+          return res.status(400).json({ message: "Invalid password." });
+        }
+      }
+  
       // Check if the user exists
       const user = await User.findOne({ email });
       if (!user) {
@@ -170,7 +196,7 @@
             roleInstance = new Doctor({
               name: user.name,
               userName: user.userName,
-              password:user.password,
+              password: user.password,
               email: user.email,
               role: role,
             });
@@ -182,7 +208,7 @@
             roleInstance = new Patient({
               name: user.name,
               userName: user.userName,
-              password:user.password,
+              password: user.password,
               email: user.email,
               role: role,
             });
@@ -239,6 +265,7 @@
       res.status(500).json({ message: "Internal Server Error" });
     }
   };
+  
   
   
   

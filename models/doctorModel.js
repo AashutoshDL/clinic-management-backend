@@ -10,20 +10,20 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  password:{
-    type:String,
-    required:true,
+  password: {
+    type: String,
+    required: true,
   },
   role: {
     type: String,
     required: true,
-    enum: ['doctor', 'admin', 'lab-technician'], // Limiting roles to a list
+    enum: ['doctor', 'admin', 'lab-technician'],
   },
   specialization: {
     type: String,
     trim: false,
   },
-  info: {
+  information: {
     type: String,
     required: false,
     trim: true,
@@ -38,10 +38,16 @@ const doctorSchema = new mongoose.Schema({
       required: false, // Optional, if the doctor has duty hours
     },
   },
-  availableTimes: {
-    type: [String], // Array of strings representing available times (e.g., "9:00 AM", "11:00 AM")
-    required: false,
-  },
+  availableTimes: [{
+    from: {
+      type: String, // Time format (e.g., "9:00 AM")
+      required: true,
+    },
+    to: {
+      type: String, // Time format (e.g., "11:00 AM")
+      required: true,
+    },
+  }],
   profilePicture: {
     type: String, // URL or path to doctor's profile image
     required: false,
@@ -92,16 +98,6 @@ const doctorSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // By default, the doctor is available
   },
-  availability: [{
-    date: {
-      type: Date,
-      required: false,
-    },
-    times: {
-      type: [String], // Times available on this specific date
-      required: false,
-    },
-  }],
 }, {
   timestamps: true, // Automatically add createdAt and updatedAt fields
 });

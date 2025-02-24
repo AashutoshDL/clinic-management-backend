@@ -11,48 +11,46 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
- * Schedule and send a daily reminder email.
+ * Schedule and send a reminder email at a specific time.
  * @param {string} email - The recipient's email address.
  * @param {string} reminderMessage - The reminder message to be sent.
  * @param {string} reminderTime - The time in HH:mm format.
  */
 const reminderService = async (email, reminderMessage, reminderTime) => {
   if (!email || !reminderMessage || !reminderTime) {
-    throw new Error("Email, reminder message, and reminder time are required");
+    throw new Error("Email, reminder message, and reminder time are required.");
   }
 
-  const [hour, minute] = reminderTime.trim().split(':')
+  const [hour, minute] = reminderTime.trim().split(':');
 
-    if(
-      isNaN(hour) || isNaN(minute) ||  hour < 0 || 
-      hour > 23 || 
-      minute < 0 || 
-      minute > 59
-    ) {
-      console.log("Hour",hour)
-      console.log("Minute",minute)
-      throw new Error('Invalid reminder time format.');
-    }
+  if (
+    isNaN(hour) || isNaN(minute) || 
+    hour < 0 || hour > 23 || 
+    minute < 0 || minute > 59
+  ) {
+    throw new Error('Invalid reminder time format. Hour should be between 0-23 and minute between 0-59.');
+  }
 
-
-  // Schedule the daily email
-  schedule.scheduleJob(`${minute} ${hour} * * *`, async () => {
+  // Schedule the reminder email at the specified time
+  const cronExpression = `${minute} ${hour} * * *`; // Cron format for scheduling
+  schedule.scheduleJob(cronExpression, async () => {
     try {
-      // Send the email
+      // Send the reminder email
       await transporter.sendMail({
         from: process.env.EMAIL,
         to: email,
-        subject: 'Daily Reminder',
-        text: `Reminder Message: ${reminderMessage}`,
+        subject: 'Reminder Notification',
+        text: `Reminder: ${reminderMessage}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-            <h2>Your Daily Reminder</h2>
+            <h2>Your Reminder</h2>
             <p>${reminderMessage}</p>
             <small>This reminder was scheduled for ${reminderTime}.</small>
           </div>
         `,
       });
-      console.log(`Daily reminder email sent to ${email} at ${reminderTime}`);
+
+      console.log(`Reminder email sent to ${email} at ${reminderTime}`);
     } catch (error) {
       console.error("Error sending email:", error.message);
     }
@@ -61,7 +59,7 @@ const reminderService = async (email, reminderMessage, reminderTime) => {
   console.log(`Email reminder scheduled for ${email} at ${reminderTime}`);
 };
 
-// Export the reminderService function using module.exports
+// Export the reminderService function
 module.exports = {
   reminderService,
 };

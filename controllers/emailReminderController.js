@@ -1,13 +1,14 @@
-const { reminderService } = require('../services/reminderService'); // Import email service
-const User = require('../models/userModel');
+const { reminderService } = require('../services/reminderService');
+const Doctor = require('../models/doctorModel');
+const Patient = require('../models/patientModel');
+const Admin = require('../models/adminModel');
 const EmailReminder = require('../models/reminderModel');
-const schedule = require('node-schedule'); // Import node-schedule for scheduling jobs
+const schedule = require('node-schedule');
 
-// Get all reminders API
+// Get all reminders for a user
 module.exports.getAllReminders = async (req, res) => {
   const { id } = req.params;
   try {
-    // Fetch all reminders for the given userId
     const reminders = await EmailReminder.find({ userId: id });
 
     if (reminders.length === 0) {
@@ -17,26 +18,37 @@ module.exports.getAllReminders = async (req, res) => {
   } catch (error) {
     console.error('Error fetching reminders:', error);
     return res.status(500).json({ message: 'Failed to fetch reminders.' });
-  }  
-} 
+  }
+};
 
-// API to set reminder
 module.exports.EmailReminder = async (req, res) => {
-  // Fetch the necessary data from the parameters and body
   const { id } = req.params;
-  const { reminderTime, reminderMessage } = req.body;
+  const { reminderTime, reminderMessage, role } = req.body;
 
-  // Check if the data is fetched properly, else display an error message
-  if (!reminderTime || !reminderMessage) {
-    return res.status(400).json({ message: "User ID, reminder time, and message are required." });
+  if (!reminderTime || !reminderMessage || !role || !Array.isArray(role) || role.length === 0) {
+    return res.status(400).json({ message: "Role, reminder time, and message are required." });
   }
 
+  // Get the first role from the array
+  const userRole = role[0];
+
   try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    let user;
+    if (userRole === 'doctor') {
+      user = await Doctor.findById(id);
+    } else if (userRole === 'patient') {
+      user = await Patient.findById(id);
+    } else if (userRole === 'admin') {
+      user = await Admin.findById(id);
+    } else {
+      return res.status(400).json({ message: "Invalid role specified." });
     }
 
+    if (!user) {
+      return res.status(404).json({ message: `${userRole} not found` });
+    }
+
+    // Create a new email reminder
     const newEmailReminder = new EmailReminder({
       userId: id,
       reminderTime,
@@ -44,51 +56,57 @@ module.exports.EmailReminder = async (req, res) => {
       email: user.email,
     });
 
-    await newEmailReminder.save(); // Save the data in the database
-
-    // Schedule the reminder email using node-schedule
-    const reminderJob = schedule.scheduleJob(reminderTime, async () => {
-      await reminderService(user.email, reminderMessage);
-    });
-
-    // Store the job ID in the database for later cancellation
-    newEmailReminder.jobId = reminderJob.id;
+    // Save the reminder
     await newEmailReminder.save();
 
-    return res.status(200).json({ message: 'Daily reminder email scheduled successfully.' });
+    // Schedule the email reminder job
+    const reminderJob = schedule.scheduleJob(reminderTime, async () => {
+      await reminderService(user.email, reminderMessage, reminderTime);
+    });
+
+    // Store the job ID in the reminder document (for cancellation later)
+    newEmailReminder.jobId = reminderJob.name;
+    await newEmailReminder.save();
+
+    return res.status(200).json({ message: 'Reminder scheduled successfully.' });
   } catch (error) {
     console.error('Error setting reminder:', error);
     return res.status(500).json({ message: 'Failed to set reminder.' });
   }
 };
 
-// Cancel or delete reminder (using userId, reminderTime, and reminderMessage)
+
+// Cancel reminder(s) for a user
 module.exports.cancelReminder = async (req, res) => {
-  const { id } = req.params;
-  const { reminderTime, reminderMessage } = req.body;  // Get reminder details from the request body
+  const { id } = req.params; // userId
+  const { reminderTime, reminderMessage } = req.body;
 
   try {
-    // Find the reminder in the database using userId, reminderTime, and reminderMessage
-    const reminder = await EmailReminder.findOne({
+    // Find the reminders by userId and optional filter criteria (time/message)
+    const reminders = await EmailReminder.find({
       userId: id,
       reminderTime,
-      reminderMessage
+      reminderMessage,
     });
 
-    if (!reminder) {
+    if (reminders.length === 0) {
       return res.status(404).json({ message: 'Reminder not found or already cancelled.' });
     }
 
-    // If the reminder is found, cancel the scheduled job
-    if (schedule.scheduledJobs[reminder.jobId]) {
-      schedule.scheduledJobs[reminder.jobId].cancel();
-      console.log(`Reminder job with ID ${reminder.jobId} has been cancelled.`);
+    // Cancel the scheduled job(s)
+    for (let reminder of reminders) {
+      if (reminder.jobId && schedule.scheduledJobs[reminder.jobId]) {
+        schedule.scheduledJobs[reminder.jobId].cancel();
+        console.log(`Cancelled reminder job ID: ${reminder.jobId}`);
+      } else {
+        console.log("No scheduled job found for cancellation.");
+      }
+
+      // Delete the reminder from the database
+      await EmailReminder.findByIdAndDelete(reminder._id);
     }
 
-    // Remove the reminder from the database
-    await EmailReminder.findByIdAndDelete(reminder._id);
-
-    return res.status(200).json({ message: 'Reminder cancelled successfully' });
+    return res.status(200).json({ message: 'Reminder(s) cancelled successfully.' });
   } catch (error) {
     console.error('Error canceling reminder:', error);
     return res.status(500).json({ message: 'Failed to cancel reminder.' });
