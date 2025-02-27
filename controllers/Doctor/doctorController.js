@@ -1,25 +1,62 @@
-const Patient = require("../models/patientModel");
+const dayjs = require("dayjs");
+const Doctor = require("../../models/doctorModel");
+const { hashPassword } = require("../../utils/hashPassword");
+const { errorResponse, successResponse } = require("../../utils/responseHandler");
+
+//create Doctor
+module.exports.createDoctor=async(req,res)=>{
+    const {name,email,password,role,specialization,dutyTime}=req.body;
+    if(!name||!email||!password||!role||!specialization||!dutyTime){
+      messageResponse(res,400,"All fields are required");
+    }
+  try{
+    const existingDoctor= await Doctor.findOne({email});
+    if(existingDoctor){
+      errorResponse(res,404,"Doctor already exists in the system")
+    }
+    const hashedPassword=await hashPassword(password);
+    const newDoctor=new Admin({
+      name,
+      email,
+      password:hashedPassword,
+      role,
+      specialization,
+      dutyTime,
+      accountCreated:dayjs().format("MMMM D, YYYY h:mm A")
+    })
+    await newDoctor.save();
+    successResponse(res,201,newDoctor,"New Doctor created successfully");
+  }catch(error){
+    errorResponse(res,500,"Internal Server Error");
+  }
+}
+
 
 // Fetch doctor by ID
-module.exports.getPatientById = async (req, res, next) => {
+module.exports.getDoctorById = async (req, res, next) => {
   try {
     const { id } = req.params; // Extract doctor ID from request parameters
-    // Find doctor by ID
-    const patient = await Patient.findById(id);
 
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+    // Find doctor by ID
+    const doctor = await Doctor.findById(id);
+
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found in the database" });
     }
+
     // Respond with doctor data
     res.status(200).json({
-      message: "Patient fetched successfully",
-      patient: {
-                id: patient._id,
-          userName: patient.userName,
-               name:patient.name,
-             email: patient.email,
-              role: patient.role,
-    accountCreated: patient.accountCreated || null,
+      message: "Doctor fetched successfully",
+      doctor: {
+        id: doctor._id,
+        name:doctor.name,
+        email: doctor.email,
+        role: doctor.role,
+        specialization: doctor.specialization || null,
+        information: doctor.information || null,
+        dutyTime: doctor.dutyTime || null,
+        availableTimes: doctor.availableTimes || null,
+        accountCreated: doctor.accountCreated || null,
       },
     });
   } catch (error) {
@@ -41,14 +78,13 @@ module.exports.getAllDoctors = async (req, res, next) => {
       message: "Doctors fetched successfully",
       doctors: doctors.map((doctor) => ({
         id: doctor._id,
-        userName: doctor.userName,
         name:doctor.name,
         email: doctor.email,
         role: doctor.role,
         specialization: doctor.specialization || null,
-        info: doctor.info || null,
+        information: doctor.information || null,
         dutyTime: doctor.dutyTime || null,
-        availableTimes: doctor.availableTimes || [],
+        availableTimes: doctor.availableTimes || null,
         accountCreated: doctor.accountCreated || null,
       })),
     });
@@ -79,13 +115,13 @@ module.exports.deleteDoctor = async (req, res) => {
 // Edit (update) doctor
 module.exports.updateDoctor = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
-  const { firstName, lastName, userName, email, role, specialization, info, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
+  const { name, email, role, specialization, information, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
 
   try {
     // Find the doctor by _id and update the relevant fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { firstName, lastName, userName, email, role, specialization, info, dutyTime, availableTimes },
+      { name,email, role, specialization, information, dutyTime, availableTimes },
       { new: true } // This returns the updated doctor object
     );
 
@@ -98,14 +134,13 @@ module.exports.updateDoctor = async (req, res) => {
       message: "Doctor updated successfully",
       doctor: {
         id: updatedDoctor._id,
-        userName: updatedDoctor.userName,
         name:updatedDoctor.name,
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
-        info: updatedDoctor.info || null,
+        information: updatedDoctor.information || null,
         dutyTime: updatedDoctor.dutyTime || null,
-        availableTimes: updatedDoctor.availableTimes || [],
+        availableTimes: updatedDoctor.availableTimes || null,
         accountCreated: updatedDoctor.accountCreated || null,
       },
     });
@@ -118,13 +153,13 @@ module.exports.updateDoctor = async (req, res) => {
 // Edit (update) doctor profile (specialization, description, and duty time)
 module.exports.editProfile = async (req, res) => {
   const { id } = req.params; // Extract 'id' from URL parameter
-  const { specialization, info, dutyTime } = req.body; // Extract specialization, description (info), and dutyTime from the request body
+  const { specialization, information, dutyTime,availableTimes } = req.body; // Extract specialization, description (info), and dutyTime from the request body
 
   try {
     // Find the doctor by _id and update the relevant fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { specialization, info, dutyTime }, // Only update the specialization, info (description), and dutyTime
+      { specialization, information, dutyTime, availableTimes }, // Only update the specialization, info (description), and dutyTime
       { new: true } // This returns the updated doctor object
     );
 
@@ -137,14 +172,13 @@ module.exports.editProfile = async (req, res) => {
       message: "Doctor profile updated successfully",
       doctor: {
         id: updatedDoctor._id,
-        userName: updatedDoctor.userName,
         name:updatedDoctor.name,
         email: updatedDoctor.email,
         role: updatedDoctor.role,
         specialization: updatedDoctor.specialization || null,
-        info: updatedDoctor.info || null,
+        information: updatedDoctor.information || null,
         dutyTime: updatedDoctor.dutyTime || null,
-        availableTimes: updatedDoctor.availableTimes || [],
+        availableTimes: updatedDoctor.availableTimes || null,
         accountCreated: updatedDoctor.accountCreated || null,
       },
     });

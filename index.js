@@ -8,6 +8,8 @@ const doctorRoutes=require("./routes/doctorRoutes");
 const patientRoutes=require("./routes/patientRoutes");
 const appointmentRoutes=require("./routes/appointmentRoutes");
 const superadminRoutes=require("./routes/superadminRoutes");
+const adminRoutes=require("./routes/Admin/adminRoutes");
+const reportRoutes=require("./routes/reportTemplateRoute")
 
 const {authenticateToken} = require("./middlewares/authenticationMiddleware");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
@@ -48,10 +50,12 @@ app.get('/me', authenticateToken, (req,res)=>{
 app.use("/auth", authRoutes);
 app.use("/user", profileRoutes);
 app.use('/doctor',doctorRoutes);
-app.use('/superadmin',superadminRoutes)
-app.use('/appointments',appointmentRoutes)
-app.use('/reminder', emailReminderRoutes)
-app.use('/patient', patientRoutes)
+app.use('/superadmin',superadminRoutes);
+app.use('/appointments',appointmentRoutes);
+app.use('/reminder', emailReminderRoutes);
+app.use('/patient', patientRoutes);
+app.use('/admin',adminRoutes);
+app.use('/report',reportRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

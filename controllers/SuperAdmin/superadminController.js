@@ -1,4 +1,4 @@
-const Superadmin = require('../models/superAdminModel');
+const Superadmin = require('../../models/superAdminModel');
 const bcrypt = require("bcrypt");
 
 

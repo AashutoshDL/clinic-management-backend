@@ -17,7 +17,7 @@ const doctorSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['doctor', 'admin', 'lab-technician'],
+    enum: ['doctor'],
   },
   specialization: {
     type: String,
@@ -53,53 +53,22 @@ const doctorSchema = new mongoose.Schema({
     required: false,
   },
   experience: {
-    type: String, // Doctor's years of experience or specific expertise
+    type: String,
     required: false,
   },
   qualifications: {
-    type: [String], // List of qualifications or degrees the doctor has
+    type: [String], 
     required: false,
   },
-  clinic: {
-    name: {
-      type: String,
-      required: false,
-    },
-    address: {
-      type: String,
-      required: false,
-    },
-    contactNumber: {
-      type: String,
-      required: false,
-    },
-  },
-  reviews: [{
-    patientName: String,
-    rating: {
-      type: Number,
-      min: 1,
-      max: 5,
-      required: false,
-    },
-    comment: {
-      type: String,
-      required: false,
-    },
-    reviewDate: {
-      type: Date,
-      default: Date.now,
-    },
-  }],
   accountCreated: {
     type: String,
   },
   isAvailable: {
     type: Boolean,
-    default: false, // By default, the doctor is available
+    default: false,
   },
 }, {
-  timestamps: true, // Automatically add createdAt and updatedAt fields
+  timestamps: true, 
 });
 
 const Doctor = mongoose.model('Doctor', doctorSchema);

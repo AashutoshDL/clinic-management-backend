@@ -1,6 +1,7 @@
-const Appointment = require('../models/appointmentModel');
-const Doctor = require("../models/doctorModel");
-const Patient = require("../models/patientModel");
+//this is the code that handles the appointments
+const Appointment = require('../../models/appointmentModel');
+const Doctor = require("../../models/doctorModel");
+const Patient = require("../../models/patientModel");
 
 module.exports.createAppointment = async (req, res) => {
   try {
@@ -46,13 +47,13 @@ module.exports.createAppointment = async (req, res) => {
 
 module.exports.getAppointmentsById = async (req, res) => {
   try {
-    const { id } = req.params;  // Get the ID from request params
+    const { id } = req.params;
     
     // Check if the role is 'doctor' or 'patient' and adjust query accordingly
     const appointments = await Appointment.find({
       $or: [
-        { doctorId: id },  // Fetch appointments where the doctorId matches the given ID
-        { patientId: id }   // Fetch appointments where the patientId matches the given ID
+        { doctorId: id },
+        { patientId: id }
       ]
     });
     
@@ -66,3 +67,4 @@ module.exports.getAppointmentsById = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
