@@ -11,7 +11,7 @@ const superadminRoutes=require("./routes/superadminRoutes");
 const adminRoutes=require("./routes/Admin/adminRoutes");
 const reportRoutes=require("./routes/reportTemplateRoute")
 
-const {authenticateToken} = require("./middlewares/authenticationMiddleware");
+const {authenticateToken} = require("./tokens/authenticateToken");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
 
 const mongoose = require("mongoose");
@@ -27,17 +27,25 @@ app.use(express.json());
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
-require("dotenv").config();
+require("dotenv").config(); 
+
+const mode='development';
 
 const URL = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Password}@pms.7s7kbw4.mongodb.net/PMS?retryWrites=true&w=majority&appName=PMS`;
+const development_URL=`mongodb://127.0.0.1:27017/`;
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(URL);
-    console.log("Database connected");
+    if(mode=="development"){
+      await mongoose.connect(development_URL);
+      console.log("Local Database connected");
+    }else{
+      await mongoose.connect(URL);
+      console.log("Cloud db connected")
+    }
   } catch (error) {
     console.error("Error connecting to database:", error.message);
-    process.exit(1);
+    process.exit(1);  
   }
 };
 connectDB();

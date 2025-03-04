@@ -29,8 +29,8 @@ module.exports.getAdminById = async(req,res) =>{
 //create admin
 module.exports.createAdmin=async(req,res) =>{
     //fetch the data from the body
-    const {name,email,password,role}=req.body;
-    if(!name||!email||!password||!role){
+    const {name,email,password}=req.body;
+    if(!name||!email||!password){
         return res.status(400).json({message:"All fields are required for admin verification"})
     }
     try {
@@ -43,7 +43,7 @@ module.exports.createAdmin=async(req,res) =>{
             name,
             email,
             password:hashedPassword,
-            role,
+            role:"admin",
             accountCreated: dayjs().format("MMMM D, YYYY h:mm A"),
         })
         await newAdmin.save();
