@@ -68,3 +68,34 @@ module.exports.getAllPatients = async (req, res) => {
     errorResponse(res, 500, "Error fetching patients");
   }
 };
+
+module.exports.medicalHistory = async (req,res)=>{
+  const { patientId, reportData } = req.body;
+
+  try {
+    // Find the patient by ID
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ success: false, message: 'Patient not found' });
+    }
+
+    // Create a new medical history entry
+    const newReport = new MedicalHistory({
+      patient: patientId,
+      templateTitle: reportData.templateTitle,
+      fields: reportData.fields,
+    });
+
+    // Save the new medical history
+    await newReport.save();
+
+    // Add the medical history entry to the patient's record
+    patient.medicalHistory.push(newReport._id);
+    await patient.save();
+
+    res.status(200).json({ success: true, message: 'Medical history saved successfully' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: 'Error saving medical history' });
+  }
+}
