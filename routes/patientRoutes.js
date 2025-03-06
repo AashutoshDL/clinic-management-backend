@@ -2,10 +2,11 @@ const express = require("express");
 const router = express.Router();
 
 // Import controller functions
-const { getPatientById, getAllPatients, medicalHistory } = require("../controllers/Patient/patientController");
+const { getPatientById, getAllPatients, createPatientReport, getPatientReportById } = require("../controllers/Patient/patientController");
 
 router.get("/getPatientById/:id", getPatientById);
 router.get("/getAllPatients",getAllPatients);
-router.post('/medicalHistory',medicalHistory);
+router.post('/createPatientReport',createPatientReport);
+router.get("/patientReportById/:id",getPatientReportById);
 
 module.exports = router;

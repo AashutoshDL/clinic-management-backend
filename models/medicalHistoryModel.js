@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 
-// Schema for the medical report data
+// Schema for the medical report fields
 const medicalHistorySchema = new mongoose.Schema({
-  patient: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient', // Reference to the Patient model
+  patientId: {
+    type: String,
+    required: true,
+  },
+  patientName: {
+    type: String,
     required: true,
   },
   templateTitle: {
@@ -13,8 +16,14 @@ const medicalHistorySchema = new mongoose.Schema({
   },
   fields: [
     {
-      label: String,
-      value: String,
+      label: {
+        type: String,
+        required: true,
+      },
+      value: {
+        type: String,
+        required: true,
+      },
     },
   ],
   reportDate: {

@@ -7,7 +7,7 @@ const patientSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
   },
   email: {
     type: String,
@@ -19,13 +19,7 @@ const patientSchema = new mongoose.Schema({
   },
   accountCreated:{
     type:String,
-  },
-  medicalHistory: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'MedicalHistory',
-    },
-  ],
+  }
 });
 
 const Patient = mongoose.model("Patient", patientSchema);
