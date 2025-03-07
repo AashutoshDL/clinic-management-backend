@@ -56,14 +56,14 @@ app.get('/me', authenticateToken, (req,res)=>{
 })
 
 app.use("/auth", authRoutes);
-app.use("/user", profileRoutes);
-app.use('/doctor',doctorRoutes);
-app.use('/superadmin',superadminRoutes);
-app.use('/appointments',appointmentRoutes);
-app.use('/reminder', emailReminderRoutes);
-app.use('/patient', patientRoutes);
-app.use('/admin',adminRoutes);
-app.use('/report',reportRoutes);
+app.use("/user",authenticateToken,profileRoutes);
+app.use('/doctor',authenticateToken, doctorRoutes);
+app.use('/superadmin',authenticateToken, superadminRoutes);
+app.use('/appointments',authenticateToken, appointmentRoutes);
+app.use('/reminder', authenticateToken, emailReminderRoutes);
+app.use('/patient',authenticateToken,  patientRoutes);
+app.use('/admin',authenticateToken, adminRoutes);
+app.use('/report',authenticateToken, reportRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
