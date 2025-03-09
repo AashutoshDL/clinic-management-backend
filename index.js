@@ -9,7 +9,8 @@ const patientRoutes=require("./routes/patientRoutes");
 const appointmentRoutes=require("./routes/appointmentRoutes");
 const superadminRoutes=require("./routes/superadminRoutes");
 const adminRoutes=require("./routes/Admin/adminRoutes");
-const reportRoutes=require("./routes/reportTemplateRoute")
+const reportRoutes=require("./routes/reportTemplateRoute");
+const autoCompleteRoutes=require('./routes/autoCompleteRoutes');
 
 const {authenticateToken} = require("./tokens/authenticateToken");
 const rateLimiter=require('./middlewares/rateLimiterMiddleware');
@@ -64,6 +65,7 @@ app.use('/reminder', authenticateToken, emailReminderRoutes);
 app.use('/patient',authenticateToken,  patientRoutes);
 app.use('/admin',authenticateToken, adminRoutes);
 app.use('/report',authenticateToken, reportRoutes);
+app.use('/auto',autoCompleteRoutes);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
