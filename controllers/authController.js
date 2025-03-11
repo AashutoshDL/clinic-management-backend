@@ -9,65 +9,9 @@
   const Admin = require("../models/adminModel");
   const User = require("../models/userModel");
   const Superadmin=require("../models/superAdminModel")
+  const {createTokens,setTokensInCookies} = require("../tokens/tokensController")
 
   const SALT_ROUNDS = 10;
-
-  const createTokens = (user) => {
-    const accessToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "5h" }
-    );
-  
-    const refreshToken = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: "7d" }
-    );
-  
-    return { accessToken, refreshToken };
-  };
-
-  const setTokensInCookies = (res, accessToken, refreshToken) => {
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      secure: false, // Set to `true` in production with HTTPS
-      sameSite: "lax",
-      maxAge: 3600000, // 1 hour
-    });
-  
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: false, // Set to `true` in production with HTTPS
-      sameSite: "lax",
-      maxAge: 604800000, // 7 days
-    });
-  };
-  
-  module.exports.refreshToken = async (req, res) => {
-    const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
-  
-    if (!refreshToken) {
-      return res.status(400).json({ message: 'Refresh token is required' });
-    }
-  
-    try {
-      const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-      const { accessToken } = createTokens(payload);
-  
-      res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        maxAge: 3600000,
-      });
-  
-      res.json({ accessToken });
-    } catch (error) {
-      console.error('Invalid refresh token:', error.message);
-      res.status(401).json({ message: 'Invalid refresh token' });
-    }
-  };
   
   module.exports.Register = async (req, res) => {
     const { name, userName, email, password, acceptedTerms } = req.body;
@@ -144,9 +88,54 @@
     }
   };
 
+  // Helper function to create the role if it doesn't exist
+const createRoleIfNotExist = async (role, user) => {
+  let roleInstance;
 
+  // Check for each role type and create if it doesn't exist
+  if (role === "doctor") {
+    roleInstance = await Doctor.findOne({ email: user.email });
+    if (!roleInstance) {
+      roleInstance = new Doctor({
+        name: user.name,
+        userName: user.userName,
+        password: user.password,
+        email: user.email,
+        role: role,
+      });
+      await roleInstance.save();
+    }
+  } else if (role === "patient") {
+    roleInstance = await Patient.findOne({ email: user.email });
+    if (!roleInstance) {
+      roleInstance = new Patient({
+        name: user.name,
+        userName: user.userName,
+        password: user.password,
+        email: user.email,
+        role: role,
+      });
+      await roleInstance.save();
+    }
+  } else if (role === "admin") {
+    roleInstance = await Admin.findOne({ email: user.email });
+    if (!roleInstance) {
+      roleInstance = new Admin({
+        name: user.name,
+        userName: user.userName,
+        password: user.password,
+        email: user.email,
+        role: role,
+      });
+      await roleInstance.save();
+    }
+  } else {
+    throw new Error("Invalid role."); 
+  }
 
-  
+  return roleInstance;
+};
+
   module.exports.Login = async (req, res) => {
     const { email, password, role } = req.body;
   
@@ -156,114 +145,61 @@
   
     try {
       // Check if the provided credentials match the superadmin
-      const superadmin = await Superadmin.findOne({ email }); // Assuming there's a Superadmin model
+      const superadmin = await Superadmin.findOne({ email });
+      let userData = null;
+  
       if (superadmin) {
         const isSuperadminPasswordCorrect = await bcrypt.compare(password, superadmin.password);
   
         if (isSuperadminPasswordCorrect) {
-          // If superadmin login is successful, set the role as an array with superadmin
-          const userData = {
-            email,
-            password,
-            role: ["superadmin"], // Set the role to superadmin if login is successful
-          };
-  
-          const { accessToken, refreshToken } = createTokens(userData);
-          setTokensInCookies(res, accessToken, refreshToken);
-  
-          return res.status(200).json({
-            message: "Logged In Successfully as Superadmin",
-            user: userData,
-          });
+          // If superadmin login is successful, set the role as superadmin
+          userData = { email, password, role: ["superadmin"] };
         } else {
           return res.status(400).json({ message: "Invalid password." });
         }
-      }
+      } else {
+        // Check if the user exists as a normal user
+        const user = await User.findOne({ email });
+        if (!user) {
+          return res.status(404).json({ message: "No user found with this email." });
+        }
   
-      // Check if the user exists as a normal user
-      const user = await User.findOne({ email });
-      if (!user) {
-        return res.status(404).json({ message: "No user found with this email." });
-      }
+        // Validate the password
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (!isPasswordCorrect) {
+          return res.status(400).json({ message: "Invalid password." });
+        }
   
-      // Validate the password
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      if (!isPasswordCorrect) {
-        return res.status(400).json({ message: "Invalid password." });
-      }
-  
-      // Check if the user is a superadmin, and if so, add 'superadmin' to their roles array
-      if (superadmin) {
-        if (!user.role.includes("superadmin")) {
+        // Check if the user is a superadmin and update roles if necessary
+        if (superadmin && !user.role.includes("superadmin")) {
           user.role.push("superadmin");
           await user.save(); // Save updated role array
         }
+  
+        // Helper function to create the role if it doesn't exist
+        let roleInstance = await createRoleIfNotExist(role, user);
+  
+        // Use the role instance for the tokens instead of user data
+        userData = {
+          _id: roleInstance._id,
+          email: user.email,
+          role: roleInstance.role,
+        };
       }
   
-      // Helper function to create the role if it doesn't exist
-      const createRoleIfNotExist = async (role, user) => {
-        let roleInstance;
-        if (role === "doctor") {
-          roleInstance = await Doctor.findOne({ email });
-          if (!roleInstance) {
-            roleInstance = new Doctor({
-              name: user.name,
-              userName: user.userName,
-              password: user.password,
-              email: user.email,
-              role: role,
-            });
-            await roleInstance.save();
-          }
-        } else if (role === "patient") {
-          roleInstance = await Patient.findOne({ email });
-          if (!roleInstance) {
-            roleInstance = new Patient({
-              name: user.name,
-              userName: user.userName,
-              password: user.password,
-              email: user.email,
-              role: role,
-            });
-            await roleInstance.save();
-          }
-        } else if (role === "admin") {
-          roleInstance = await Admin.findOne({ email });
-          if (!roleInstance) {
-            roleInstance = new Admin({
-              email: user.email,
-              password: user.password,
-              role: role,
-            });
-            await roleInstance.save();
-          }
-        } else {
-          throw new Error("Invalid role.");
-        }
-        return roleInstance;
-      };
-  
-      // Create role if it doesn't exist
-      let roleInstance = await createRoleIfNotExist(role, user);
-  
-      // Generate JWT tokens with roleInstance ID instead of user ID
-      const { accessToken, refreshToken } = createTokens({
-        _id: roleInstance._id, // Use the ID of the logged-in role instance
-        email: user.email,
-        role: roleInstance.role, // Use role-specific info
-      });
+      // Generate JWT tokens with roleInstance ID
+      const { accessToken } = createTokens(userData);
   
       // Set tokens in cookies
-      setTokensInCookies(res, accessToken, refreshToken);
+      setTokensInCookies(res, accessToken);
   
       // Respond with success message and user details
       return res.status(200).json({
-        message: `Logged In Successfully as ${role.charAt(0).toUpperCase() + role.slice(1)}`,
+        message: `Logged In Successfully as ${userData.role[0].charAt(0).toUpperCase() + userData.role[0].slice(1)}`,
         user: {
-          id: roleInstance._id, // Send the correct object ID based on the role
-          name: roleInstance.name,
-          email: roleInstance.email,
-          roles: roleInstance.role, // Return the updated roles array
+          id: userData._id,
+          email: userData.email,
+          roles: userData.role, 
         },
       });
   
@@ -274,11 +210,7 @@
   };
   
   
-  
   module.exports.Logout = async (req, res) => {
     res.clearCookie("accessToken", { httpOnly: true, secure: false, sameSite: "lax" });
-    res.clearCookie("refreshToken", { httpOnly: true, secure: false, sameSite: "lax" });
     res.status(200).json({ message: "Logged out successfully" });
   };
-
-  
