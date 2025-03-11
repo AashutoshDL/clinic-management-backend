@@ -5,9 +5,9 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  userName: {
+  password: {
     type: String,
-    required: true,
+    required: false,
   },
   email: {
     type: String,

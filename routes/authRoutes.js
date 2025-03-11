@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 // Import controller functions
-const { Register, Login, verifyEmail, Logout,refreshToken,me} = require("../controllers/authController");
+const { Register, Login, verifyEmail, Logout,refreshToken} = require("../controllers/authController");
 
 router.post("/register", Register);
 router.post("/login", Login);
