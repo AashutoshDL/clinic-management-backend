@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
+const { errorResponse } = require("../utils/responseHandler");
 require("dotenv").config();
 
 module.exports.authenticateToken = async (req, res, next) => {
-  const token = req.cookies.accessToken || req.body.accessToken;
+  const token = req.cookies.accessToken;
 
   if (!token) {
-    return res.status(404).json({ message: "Access Denied: Token missing" });
+    return errorResponse(res, 404, "Access Denied: Token missing");
   }
 
   try {
@@ -13,6 +14,8 @@ module.exports.authenticateToken = async (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
+    if (res.headersSent) return; 
+
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Token expired, please log in again." });
     } else if (error.name === "JsonWebTokenError") {
