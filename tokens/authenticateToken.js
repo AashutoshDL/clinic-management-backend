@@ -3,7 +3,7 @@ const { errorResponse } = require("../utils/responseHandler");
 require("dotenv").config();
 
 module.exports.authenticateToken = async (req, res, next) => {
-  const token = req.cookies.accessToken;
+  const token = req.cookies.accessToken || req.body.accessToken;
 
   if (!token) {
     return errorResponse(res, 404, "Access Denied: Token missing");

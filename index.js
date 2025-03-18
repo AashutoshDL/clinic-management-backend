@@ -9,7 +9,6 @@ require("dotenv").config();
 const chatController = require("./controllers/messageController"); // Import chat controller
 
 const authRoutes = require("./routes/authRoutes");
-const profileRoutes = require("./routes/profileRoutes");
 const emailReminderRoutes = require("./routes/emailReminderRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const patientRoutes = require("./routes/patientRoutes");
@@ -57,7 +56,6 @@ app.get("/me", authenticateToken, (req, res) => {
 
 // Routes
 app.use("/auth", authRoutes);
-app.use("/user", profileRoutes);
 app.use("/doctor", doctorRoutes);
 app.use("/superadmin", superadminRoutes);
 app.use("/appointments", appointmentRoutes);
@@ -68,7 +66,6 @@ app.use("/report", reportRoutes);
 app.use("/auto", autoCompleteRoutes);
 app.use("/chat",messageRoutes)
 
-// 🛠 WebSocket Setup
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
