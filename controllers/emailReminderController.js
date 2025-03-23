@@ -4,6 +4,8 @@ const Patient = require('../models/patientModel');
 const Admin = require('../models/adminModel');
 const EmailReminder = require('../models/reminderModel');
 const schedule = require('node-schedule');
+const Appointment = require('../models/appointmentModel');
+const mongoose=require('mongoose')
 
 // Get all reminders for a user
 module.exports.getAllReminders = async (req, res) => {
@@ -21,60 +23,100 @@ module.exports.getAllReminders = async (req, res) => {
   }
 };
 
+// module.exports.EmailReminder = async (req, res) => {
+//   const { id } = req.params;
+//   const { reminderTime, reminderMessage, role } = req.body;
+
+//   if (!reminderTime || !reminderMessage || !role || !Array.isArray(role) || role.length === 0) {
+//     return res.status(400).json({ message: "Role, reminder time, and message are required." });
+//   }
+
+//   // Get the first role from the array
+//   const userRole = role[0];
+
+//   try {
+//     let user;
+//     if (userRole === 'doctor') {
+//       user = await Doctor.findById(id);
+//     } else if (userRole === 'patient') {
+//       user = await Patient.findById(id);
+//     } else if (userRole === 'admin') {
+//       user = await Admin.findById(id);
+//     } else {
+//       return res.status(400).json({ message: "Invalid role specified." });
+//     }
+
+//     if (!user) {
+//       return res.status(404).json({ message: `${userRole} not found` });
+//     }
+
+//     // Create a new email reminder
+//     const newEmailReminder = new EmailReminder({
+//       userId: id,
+//       reminderTime,
+//       reminderMessage,
+//       email: user.email,
+//     });
+
+//     // Save the reminder
+//     await newEmailReminder.save();
+
+//     // Schedule the email reminder job
+//     const reminderJob = schedule.scheduleJob(reminderTime, async () => {
+//       await reminderService(user.email, reminderMessage, reminderTime);
+//     });
+
+//     // Store the job ID in the reminder document (for cancellation later)
+//     newEmailRemi
+// nder.jobId = reminderJob.name;
+//     await newEmailReminder.save();
+
+//     return res.status(200).json({ message: 'Reminder scheduled successfully.' });
+//   } catch (error) {
+//     console.error('Error setting reminder:', error);
+//     return res.status(500).json({ message: 'Failed to set reminder.' });
+//   }
+// };
+
 module.exports.EmailReminder = async (req, res) => {
-  const { id } = req.params;
-  const { reminderTime, reminderMessage, role } = req.body;
-
-  if (!reminderTime || !reminderMessage || !role || !Array.isArray(role) || role.length === 0) {
-    return res.status(400).json({ message: "Role, reminder time, and message are required." });
-  }
-
-  // Get the first role from the array
-  const userRole = role[0];
-
   try {
-    let user;
-    if (userRole === 'doctor') {
-      user = await Doctor.findById(id);
-    } else if (userRole === 'patient') {
-      user = await Patient.findById(id);
-    } else if (userRole === 'admin') {
-      user = await Admin.findById(id);
-    } else {
-      return res.status(400).json({ message: "Invalid role specified." });
+    const { id } = req.params;
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
     }
 
-    if (!user) {
-      return res.status(404).json({ message: `${userRole} not found` });
+    const { patientId, patientName, doctorName, time } = appointment;
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
     }
+    const patientEmail = patient.email;
 
-    // Create a new email reminder
+    const startTimeString = time.split(" - ")[0];
+    const [hours, minutes] = startTimeString.split(":").map(Number);
+
+    let reminderTime = new Date();
+    reminderTime.setHours(hours - 1, minutes, 0, 0);
+
     const newEmailReminder = new EmailReminder({
-      userId: id,
+      appointmentId: id,
+      email: patientEmail,
+      doctorName,
+      time,
+      patientName,
       reminderTime,
-      reminderMessage,
-      email: user.email,
+      userId:patientId,
     });
 
-    // Save the reminder
     await newEmailReminder.save();
+    res.json({ message: "Reminder set successfully", reminderTime });
 
-    // Schedule the email reminder job
-    const reminderJob = schedule.scheduleJob(reminderTime, async () => {
-      await reminderService(user.email, reminderMessage, reminderTime);
-    });
-
-    // Store the job ID in the reminder document (for cancellation later)
-    newEmailReminder.jobId = reminderJob.name;
-    await newEmailReminder.save();
-
-    return res.status(200).json({ message: 'Reminder scheduled successfully.' });
   } catch (error) {
-    console.error('Error setting reminder:', error);
-    return res.status(500).json({ message: 'Failed to set reminder.' });
+    console.error("Error setting email reminder:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
-
 
 // Cancel reminder(s) for a user
 module.exports.cancelReminder = async (req, res) => {
