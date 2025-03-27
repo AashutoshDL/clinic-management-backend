@@ -122,6 +122,9 @@ module.exports.setupProfileById = async (req, res) => {
     try {
         const { id } = req.params;
         const {
+            name,
+            email,
+            userName,
             bloodType,
             height,
             heightUnit,
@@ -141,6 +144,9 @@ module.exports.setupProfileById = async (req, res) => {
             return messageResponse(res, 404, "Patient Not Found");
         }
 
+        patient.name=name || patient.name,
+        patient.userName= userName || patient.userName,
+        patient.email = email || patient.email,
         patient.bloodType = bloodType || patient.bloodType;
         patient.height = height || patient.height;
         patient.heightUnit = heightUnit || patient.heightUnit;

@@ -1,4 +1,3 @@
-//this is the code that handles the appointments
 const Appointment = require('../../models/appointmentModel');
 const Doctor = require("../../models/doctorModel");
 const Patient = require("../../models/patientModel");
@@ -6,7 +5,7 @@ const Patient = require("../../models/patientModel");
 module.exports.createAppointment = async (req, res) => {
   try {
     const { doctorId, patientId, doctorName, patientName, time } = req.body;
-    const { id } = req.params; // Logged-in user ID
+    const { id } = req.params;
 
     if (!doctorId || !patientId || !doctorName || !patientName || !time) {
       return res.status(400).json({ message: 'All fields are required.' });
@@ -35,7 +34,7 @@ module.exports.createAppointment = async (req, res) => {
     }
 
     // Create and save the appointment
-    const newAppointment = new Appointment({ doctorId, doctorName, patientId, patientName, time });
+    const newAppointment = new Appointment({ doctorId, doctorName, patientId, patientName, time, status:"Confirmed" });
     await newAppointment.save();
 
     return res.status(201).json({ message: 'Appointment created successfully', appointment: newAppointment });
@@ -54,7 +53,8 @@ module.exports.getAppointmentsById = async (req, res) => {
       $or: [
         { doctorId: id },
         { patientId: id }
-      ]
+      ],
+      status:{$ne:"Pending"}
     });
     
     if (!appointments || appointments.length === 0) {
@@ -67,4 +67,3 @@ module.exports.getAppointmentsById = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
-

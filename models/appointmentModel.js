@@ -27,7 +27,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: 'Scheduled', // Default status is 'Scheduled'
+    default: 'Pending',
   },
   createdAt: {
     type: Date,

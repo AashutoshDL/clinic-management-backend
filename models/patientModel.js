@@ -7,7 +7,7 @@ const patientSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false,
+    required: true,
   },
   email: {
     type: String,
@@ -15,7 +15,7 @@ const patientSchema = new mongoose.Schema({
   },
   role: {
     type: [String],
-    enum: ['user', 'patient', 'doctor', 'lab-technician', 'admin', 'superadmin'],
+    enum: ['patient'],
   },
   accountCreated: {
     type: String,
@@ -62,6 +62,9 @@ const patientSchema = new mongoose.Schema({
   bloodGlucose: {
     type: Number, // Blood Glucose Level
   },
+  verificationCode:{
+    type:String,
+  }
 });
 
 const Patient = mongoose.model("Patient", patientSchema);
