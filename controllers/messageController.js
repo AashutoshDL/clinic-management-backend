@@ -1,42 +1,66 @@
-const userSockets = {}; // This will store the socket connections based on the doctorId
+const Chat = require("../models/chatModel")
 
-// Start a chat with a specific doctor
-const startChat = (socket, doctorId) => {
-  userSockets[doctorId] = socket; // Store the socket connection for the doctor
-  console.log(`User started chat with doctor ${doctorId}`);
+const userSockets = {};
+
+// Add user to the socket list
+const addUser = (userId, socket) => {
+  if (!userSockets[userId]) {
+    userSockets[userId] = [];
+  }
+  userSockets[userId].push(socket);
 };
 
-// Send a message to the doctor
-const sendMessage = (socket, message) => {
-  const { recipientId, text, sender } = message;
-
-  if (userSockets[recipientId]) {
-    // Send the message to the connected doctor
-    userSockets[recipientId].emit("receiveMessage", {
-      text,
-      sender,
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    });
-    console.log(`Message sent to doctor ${recipientId}: ${text}`);
-  } else {
-    console.log("Doctor is not online.");
+// Remove user when they disconnect
+const removeUser = (socket) => {
+  for (const userId in userSockets) {
+    userSockets[userId] = userSockets[userId].filter((s) => s !== socket);
+    if (userSockets[userId].length === 0) delete userSockets[userId];
   }
 };
 
-// Handle a disconnect
-const handleDisconnect = (socket) => {
-  // Find and remove the socket from the userSockets map
-  for (const doctorId in userSockets) {
-    if (userSockets[doctorId] === socket) {
-      delete userSockets[doctorId];
-      console.log(`Doctor ${doctorId} disconnected`);
-      break;
+// Start a chat: Track the user connection
+const startChat = (socket, userId) => {
+  addUser(userId, socket);
+  // console.log(`User ${userId} connected on message controller`);
+};
+
+const sendMessage = async (socket, message) => {
+  const { senderId, receiverId, message:text } = message;
+
+  // Check if all required fields are present
+  if (!senderId || !receiverId || !text) {
+    // console.log(receiverId)
+    // console.log(senderId)
+    console.error("Missing required fields in the message:", message);
+    return;
+  } 
+
+  try {``
+    // Save message to MongoDB
+    const newMessage = new Chat({ senderId, receiverId, message: text });
+    await newMessage.save();
+
+    // Deliver message to recipient if they're online
+    if (userSockets[receiverId]) {
+      userSockets[receiverId].forEach((recipientSocket) => {
+        recipientSocket.emit("receiveMessage", {
+          text,
+          sender: senderId,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        });
+      });
     }
+  } catch (error) {
+    console.error("Error saving message:", error);
   }
 };
 
-module.exports = {
-  startChat,
-  sendMessage,
-  handleDisconnect,
+
+// Handle user disconnection: clean up the socket list
+const handleDisconnect = (socket) => {
+  removeUser(socket);
+  // console.log("User disconnected, cleaned up socket.");
 };
+
+// Export each function separately for use in index.js
+module.exports = { startChat, sendMessage, handleDisconnect };
