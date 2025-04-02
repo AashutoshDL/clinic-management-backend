@@ -237,8 +237,8 @@ module.exports.Login = async (req, res) => {
       }
 
       // // Debugging logs:
-      // console.log("Password from request:", password);
-      // console.log("Hashed password from database:", roleInstance.password);
+    //   console.log("Password from request:", password);
+    //   console.log("Hashed password from database:", roleInstance.password);
 
       if (!roleInstance.password) { // Check if the password exists
           console.error("Error: Hashed password is not present in the database for this user.");
