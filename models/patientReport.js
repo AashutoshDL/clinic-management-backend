@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Schema for the medical report fields
-const medicalHistorySchema = new mongoose.Schema({
+const patientReportSchema = new mongoose.Schema({
   patientId: {
     type: String,
     required: true,
@@ -32,6 +32,6 @@ const medicalHistorySchema = new mongoose.Schema({
   },
 });
 
-const MedicalHistory = mongoose.model('MedicalHistory', medicalHistorySchema);
+const PatientReport = mongoose.model('PatientReport', patientReportSchema);
 
-module.exports = MedicalHistory;
+module.exports = PatientReport;

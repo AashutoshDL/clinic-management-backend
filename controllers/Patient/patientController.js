@@ -1,6 +1,6 @@
 const Patient = require("../../models/patientModel");
 const { messageResponse, errorResponse, successResponse } = require("../../utils/responseHandler");
-const MedicalHistory = require("../../models/medicalHistoryModel")
+const PatientReport = require("../../models/patientReport")
 
 // Fetch patient by ID
 module.exports.getPatientById = async (req, res) => {
@@ -103,7 +103,7 @@ module.exports.createPatientReport = async (req, res) => {
 module.exports.getPatientReportById = async (req, res) => {
   try {
     const { id } = req.params; // This is the patient ID
-    const reports = await MedicalHistory.find({ patientId: id });
+    const reports = await PatientReport.find({ patientId: id });
 
     if (!reports || reports.length === 0) {
         return errorResponse(res, 404, "No medical history found for this patient");
