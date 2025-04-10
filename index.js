@@ -18,6 +18,8 @@ const adminRoutes = require("./routes/Admin/adminRoutes");
 const reportRoutes = require("./routes/reportTemplateRoute");
 const autoCompleteRoutes = require("./routes/autoCompleteRoutes");
 const messageRoutes=require("./routes/messageRoutes");
+const patientHistoryRoutes = require("./routes/patientHistoryRoutes");
+
 const { authenticateToken } = require("./tokens/authenticateToken");
 
 const app = express();
@@ -63,6 +65,7 @@ app.use("/reminder", emailReminderRoutes);
 app.use("/patient", patientRoutes);
 app.use("/admin", adminRoutes);
 app.use("/report", reportRoutes);
+app.use("/history",patientHistoryRoutes)
 app.use("/auto", autoCompleteRoutes);
 app.use("/chat",messageRoutes)
 

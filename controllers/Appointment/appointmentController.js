@@ -2,12 +2,27 @@ const Appointment = require('../../models/appointmentModel');
 const Doctor = require("../../models/doctorModel");
 const Patient = require("../../models/patientModel");
 
+module.exports.getAllAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find();
+
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({ message: 'No appointments found.' });
+    }
+
+    return res.status(200).json({ appointments });
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
 module.exports.createAppointment = async (req, res) => {
   try {
-    const { doctorId, patientId, doctorName, patientName, time } = req.body;
+    const { doctorId, patientId, doctorName, patientName, date, time } = req.body;
     const { id } = req.params;
 
-    if (!doctorId || !patientId || !doctorName || !patientName || !time) {
+    if (!doctorId || !patientId || !doctorName || !patientName || !time ||!date) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
@@ -28,13 +43,13 @@ module.exports.createAppointment = async (req, res) => {
     }
 
     // Check if the appointment already exists
-    const existingAppointment = await Appointment.findOne({ doctorId, patientId, time });
+    const existingAppointment = await Appointment.findOne({ doctorId, patientId, time, date });
     if (existingAppointment) {
       return res.status(400).json({ message: 'You already have an appointment with this doctor at the selected time.' });
     }
 
     // Create and save the appointment
-    const newAppointment = new Appointment({ doctorId, doctorName, patientId, patientName, time, status:"Confirmed" });
+    const newAppointment = new Appointment({ doctorId, doctorName, patientId, patientName,date, time, status:"Pending" });
     await newAppointment.save();
 
     return res.status(201).json({ message: 'Appointment created successfully', appointment: newAppointment });
@@ -48,13 +63,11 @@ module.exports.getAppointmentsById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if the role is 'doctor' or 'patient' and adjust query accordingly
     const appointments = await Appointment.find({
       $or: [
         { doctorId: id },
         { patientId: id }
       ],
-      status:{$ne:"Pending"}
     });
     
     if (!appointments || appointments.length === 0) {
@@ -64,6 +77,53 @@ module.exports.getAppointmentsById = async (req, res) => {
     return res.status(200).json({ appointments });
   } catch (error) {
     console.error('Error fetching appointments:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+module.exports.confirmAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: 'Appointment ID is required.' });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found.' });
+    }
+
+    appointment.status = "Confirmed";
+    await appointment.save();
+
+    return res.status(200).json({ message: 'Appointment confirmed successfully.', appointment });
+  } catch (error) {
+    console.error('Error confirming appointment:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+module.exports.cancelAppointmentById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: 'Appointment ID is required.' });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found.' });
+    }
+
+    // Update appointment status to "Cancelled"
+    appointment.status = "Cancelled";
+    await appointment.save();
+
+    return res.status(200).json({ message: 'Appointment cancelled successfully.', appointment });
+  } catch (error) {
+    console.error('Error cancelling appointment:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };

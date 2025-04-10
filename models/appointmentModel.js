@@ -1,11 +1,10 @@
-// models/appointmentModel.js
 
 const mongoose = require('mongoose');
 
 const appointmentSchema = new mongoose.Schema({
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming the doctor is also stored in the 'User' model
+    ref: 'Doctor',
     required: true,
   },
   doctorName: {
@@ -14,7 +13,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // Assuming the patient is also stored in the 'User' model
+    ref: 'Patient',
     required: true,
   },
   patientName: {
@@ -22,8 +21,12 @@ const appointmentSchema = new mongoose.Schema({
     required: true,
   },
   time: {
-    type: String, // Store the selected time as a string (e.g., "10:00 AM - 11:00 AM")
+    type: String,
     required: true,
+  },
+  date:{
+    type:String,
+    required:true,    
   },
   status: {
     type: String,
