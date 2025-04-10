@@ -1,5 +1,7 @@
 const schedule = require('node-schedule');
 const nodemailer = require('nodemailer');
+const EmailReminder = require('../models/reminderModel');
+const Appointment = require('../models/appointmentModel');
 
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
@@ -18,9 +20,9 @@ const transporter = nodemailer.createTransport({
  * @param {string} appointmentTime - The time of the appointment.
  * @param {string} reminderTime - The time in HH:mm format to send the reminder.
  */
-const reminderService = async (email, doctorName, patientName, time, reminderTime) => {
-  if (!email || !doctorName || !patientName || !time || !reminderTime) {
-    throw new Error("Email, doctor name, patient name, appointment time, reminder message, and reminder time are required.");
+const reminderService = async (email, doctorName, patientName, appointmentTime, reminderTime, appointmentId) => {
+  if (!email || !doctorName || !patientName || !appointmentTime || !reminderTime) {
+    throw new Error("Email, doctor name, patient name, appointment time, and reminder time are required.");
   }
 
   const [hour, minute] = reminderTime.trim().split(':');
@@ -42,21 +44,30 @@ const reminderService = async (email, doctorName, patientName, time, reminderTim
         from: process.env.EMAIL,
         to: email,
         subject: 'Appointment Reminder Notification',
-        text: `
-          Reminder: You have an appointment scheduled with Dr. ${doctorName} at ${appointmentTime}.
-        `,
+        text: `Reminder: You have an appointment scheduled with Dr. ${doctorName} at ${appointmentTime}.`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5;">
             <h2>Appointment Reminder</h2>
             <p>You have an upcoming appointment with <strong>Dr. ${doctorName}</strong> at <strong>${appointmentTime}</strong>.</p>
             <p><strong>Patient Name:</strong> ${patientName}</p>
-            <p>${reminderMessage}</p>
-            <small>This reminder was scheduled for ${reminderTime}.</small>
+            <p>This reminder was scheduled for ${reminderTime}.</p>
           </div>
         `,
       });
 
       console.log(`Appointment reminder email sent to ${email} at ${reminderTime}`);
+
+      const result = await EmailReminder.updateOne(
+        { appointmentId: appointmentId }, 
+        { reminderStatus: 'Sent' }
+      );
+
+      if (result.nModified === 0) {
+        console.log(`No reminder found for appointmentId: ${appointmentId}`);
+      } else {
+        console.log(`Reminder status updated for appointmentId: ${appointmentId}`);
+      }
+
     } catch (error) {
       console.error("Error sending email:", error.message);
     }

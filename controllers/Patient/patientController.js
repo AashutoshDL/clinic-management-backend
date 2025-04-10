@@ -74,7 +74,7 @@ module.exports.createPatientReport = async (req, res) => {
     }
 
     // Create a new medical history entry
-    const newReport = new MedicalHistory({
+    const newReport = new PatientReport({
       patientId,
       patientName,
       templateTitle,

@@ -89,3 +89,8 @@ module.exports.getAllAdmin = async (req, res) => {
         errorResponse(res,500,"Internal Server Error");
     }
   };
+
+
+  module.exports.createPatientByAdmin = async ()=>{
+    
+  }
