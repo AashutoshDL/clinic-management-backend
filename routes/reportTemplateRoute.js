@@ -6,7 +6,7 @@ const {createReportTemplate,getReportTemplateById,updateReportTemplate,deleteRep
 router.get('/getAllReportTemplates',getAllReportTemplates);
 router.post('/createReportTemplate',createReportTemplate);
 router.get('/getReportTemplateById/:id',getReportTemplateById);
-router.put('/updateReportTemplate/:id',updateReportTemplate);
+router.patch('/updateReportTemplate/:id',updateReportTemplate);
 router.delete('/deleteReportTemplate/:id',deleteReportTemplate);
 
 module.exports=router
