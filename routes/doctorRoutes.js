@@ -3,7 +3,6 @@ const router = express.Router();
 
 const {getDoctorById,getAllDoctors, deleteDoctor, editProfile, createDoctor}= require("../controllers/Doctor/doctorController");
 
-// Route to set a reminder (schedules daily reminder)
 router.get('/getDoctorById/:id', getDoctorById);
 
 router.get('/getAllDoctors', getAllDoctors);

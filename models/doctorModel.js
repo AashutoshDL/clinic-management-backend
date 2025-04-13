@@ -40,11 +40,11 @@
     },
     availableTimes: [{
       from: {
-        type: String, // Time format (e.g., "9:00 AM")
+        type: String, 
         required: true,
       },
       to: {
-        type: String, // Time format (e.g., "11:00 AM")
+        type: String, 
         required: true,
       },
     }],

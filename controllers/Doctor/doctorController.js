@@ -3,7 +3,6 @@ const Doctor = require("../../models/doctorModel");
 const { hashPassword } = require("../../utils/hashPassword");
 const { errorResponse, successResponse } = require("../../utils/responseHandler");
 
-//create Doctor
 module.exports.createDoctor=async(req,res)=>{
     const {name,email,password,role,specialization,dutyTime}=req.body;
     if(!name||!email||!password||!role||!specialization||!dutyTime){
@@ -31,20 +30,16 @@ module.exports.createDoctor=async(req,res)=>{
   }
 }
 
-
-// Fetch doctor by ID
 module.exports.getDoctorById = async (req, res, next) => {
   try {
-    const { id } = req.params; // Extract doctor ID from request parameters
+    const { id } = req.params; 
 
-    // Find doctor by ID
     const doctor = await Doctor.findById(id);
 
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found in the database" });
     }
 
-    // Respond with doctor data
     res.status(200).json({
       message: "Doctor fetched successfully",
       doctor: {
@@ -65,10 +60,9 @@ module.exports.getDoctorById = async (req, res, next) => {
   }
 };
 
-// Fetch all doctors
 module.exports.getAllDoctors = async (req, res, next) => {
   try {
-    const doctors = await Doctor.find(); // Fetch all doctors from the database
+    const doctors = await Doctor.find(); 
 
     if (!doctors || doctors.length === 0) {
       return res.status(404).json({ message: "No doctors found" });
@@ -94,12 +88,11 @@ module.exports.getAllDoctors = async (req, res, next) => {
   }
 };
 
-// Delete doctor
 module.exports.deleteDoctor = async (req, res) => {
-  const { id } = req.params; // Extract 'id' from URL parameter
+  const { id } = req.params; 
 
   try {
-    const deletedDoctor = await Doctor.findByIdAndDelete(id); // Use 'id' to find and delete the doctor by _id
+    const deletedDoctor = await Doctor.findByIdAndDelete(id); 
 
     if (!deletedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
@@ -112,24 +105,22 @@ module.exports.deleteDoctor = async (req, res) => {
   }
 };
 
-// Edit (update) doctor
 module.exports.updateDoctor = async (req, res) => {
-  const { id } = req.params; // Extract 'id' from URL parameter
-  const { name, email, role, specialization, information, dutyTime, availableTimes } = req.body; // Extract doctor details from the request body
+  const { id } = req.params; 
+  const { name, email, role, specialization, information, dutyTime, availableTimes } = req.body; 
 
   try {
-    // Find the doctor by _id and update the relevant fields
+
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
       { name,email, role, specialization, information, dutyTime, availableTimes },
-      { new: true } // This returns the updated doctor object
+      { new: true } 
     );
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    // Respond with the updated doctor details
     res.status(200).json({
       message: "Doctor updated successfully",
       doctor: {
@@ -150,24 +141,22 @@ module.exports.updateDoctor = async (req, res) => {
   }
 };
 
-// Edit (update) doctor profile (specialization, description, and duty time)
 module.exports.editProfile = async (req, res) => {
-  const { id } = req.params; // Extract 'id' from URL parameter
-  const { specialization, information, dutyTime,availableTimes } = req.body; // Extract specialization, description (info), and dutyTime from the request body
+  const { id } = req.params; 
+  const { specialization, information, dutyTime,availableTimes } = req.body; 
 
   try {
-    // Find the doctor by _id and update the relevant fields
+
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
-      { specialization, information, dutyTime, availableTimes }, // Only update the specialization, info (description), and dutyTime
-      { new: true } // This returns the updated doctor object
+      { specialization, information, dutyTime, availableTimes }, 
+      { new: true } 
     );
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    // Respond with the updated doctor details
     res.status(200).json({
       message: "Doctor profile updated successfully",
       doctor: {

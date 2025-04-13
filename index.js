@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
-const chatController = require("./controllers/messageController"); // Import chat controller
+const chatController = require("./controllers/messageController"); 
 
 const authRoutes = require("./routes/authRoutes");
 const emailReminderRoutes = require("./routes/emailReminderRoutes");
@@ -19,13 +19,13 @@ const reportRoutes = require("./routes/reportTemplateRoute");
 const autoCompleteRoutes = require("./routes/autoCompleteRoutes");
 const messageRoutes=require("./routes/messageRoutes");
 const patientHistoryRoutes = require("./routes/patientHistoryRoutes");
+const pdfUploadRoutes=require('./routes/pdfUploadRoutes');
 
 const { authenticateToken } = require("./tokens/authenticateToken");
 
 const app = express();
-const server = http.createServer(app); // Create HTTP server
+const server = http.createServer(app); 
 
-// Enable CORS
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -35,7 +35,6 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-// Database Connection
 const mode = "development";
 const URL = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Password}@pms.7s7kbw4.mongodb.net/PMS?retryWrites=true&w=majority&appName=PMS`;
 const development_URL = `mongodb://127.0.0.1:27017/`;
@@ -56,7 +55,6 @@ app.get("/me", authenticateToken, (req, res) => {
   res.json({ id, role });
 });
 
-// Routes
 app.use("/auth", authRoutes);
 app.use("/doctor", doctorRoutes);
 app.use("/superadmin", superadminRoutes);
@@ -67,7 +65,8 @@ app.use("/admin", adminRoutes);
 app.use("/report", reportRoutes);
 app.use("/history",patientHistoryRoutes)
 app.use("/auto", autoCompleteRoutes);
-app.use("/chat",messageRoutes)
+app.use("/chat",messageRoutes);
+app.use('/uploads',pdfUploadRoutes);
 
 const io = new Server(server, {
   cors: {
@@ -77,19 +76,16 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  // console.log(`Client Connected: ${socket.id} from index js`);
 
-  // Handle user joining the chat
+
   socket.on("startChat", ({ userId }) => {
     chatController.startChat(socket, userId);
   });
 
-  // Handle sending messages
   socket.on("sendMessage", async (message) => {
     await chatController.sendMessage(socket, message);
   });
 
-  // Handle user disconnect
   socket.on("disconnect", () => {
     chatController.handleDisconnect(socket);
   });

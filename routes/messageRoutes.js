@@ -2,7 +2,6 @@ const express = require("express");
 const Chat = require("../models/chatModel");
 const router = express.Router();
 
-// Get chat history between two users
 router.get("/history/:userId/:partnerId", async (req, res) => {
   try {
     const { userId, partnerId } = req.params;

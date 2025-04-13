@@ -27,7 +27,7 @@ const patientSchema = new mongoose.Schema({
     default: 'Unknown',
   },
   height: {
-    type: Number, // Assuming height is stored in cm or inches
+    type: Number, 
   },
   heightUnit: {
     type: String,
@@ -35,7 +35,7 @@ const patientSchema = new mongoose.Schema({
     default: 'cm',
   },
   weight: {
-    type: Number, // Assuming weight is stored in kg or lbs
+    type: Number, 
   },
   weightUnit: {
     type: String,
@@ -43,16 +43,16 @@ const patientSchema = new mongoose.Schema({
     default: 'kg',
   },
   systolicBP: {
-    type: Number, // Blood Pressure (Systolic)
+    type: Number, 
   },
   diastolicBP: {
-    type: Number, // Blood Pressure (Diastolic)
+    type: Number, 
   },
   heartRate: {
-    type: Number, // Heart Rate (BPM)
+    type: Number, 
   },
   temperature: {
-    type: Number, // Body Temperature
+    type: Number, 
   },
   temperatureUnit: {
     type: String,
@@ -60,7 +60,7 @@ const patientSchema = new mongoose.Schema({
     default: 'C',
   },
   bloodGlucose: {
-    type: Number, // Blood Glucose Level
+    type: Number, 
   },
   verificationCode:{
     type:String,

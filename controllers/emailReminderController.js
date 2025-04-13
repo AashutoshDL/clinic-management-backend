@@ -8,15 +8,13 @@ const mongoose = require('mongoose');
 
 module.exports.getAllReminders = async (req, res) => {
   try {
-    // Fetch all reminders
+
     const reminders = await EmailReminder.find();
 
-    // If no reminders found, return a 404
     if (!reminders || reminders.length === 0) {
       return res.status(404).json({ message: 'No reminders found.' });
     }
 
-    // Return the found reminders
     return res.status(200).json(reminders);
   } catch (error) {
     console.error('Error fetching all reminders:', error);
@@ -28,21 +26,18 @@ module.exports.getAllReminders = async (req, res) => {
 module.exports.getReminderByPatientId = async (req, res) => {
   const { patientId } = req.params;
 
-  // Validate that the patientId is a valid ObjectId
   if (!mongoose.Types.ObjectId.isValid(patientId)) {
     return res.status(400).json({ message: 'Invalid patient ID format.' });
   }
 
   try {
-    // Fetch the reminders for the patient by their patientId
+
     const reminders = await EmailReminder.find({ patientId });
 
-    // If no reminders found, return a 404
     if (!reminders || reminders.length === 0) {
       return res.status(404).json({ message: 'No reminders found for this patient.' });
     }
 
-    // Return the found reminders
     return res.status(200).json(reminders);
   } catch (error) {
     console.error('Error fetching reminders by patient ID:', error);
@@ -55,7 +50,6 @@ module.exports.EmailReminder = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find the appointment first
     const appointment = await Appointment.findById(id);
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
@@ -63,7 +57,6 @@ module.exports.EmailReminder = async (req, res) => {
 
     const { patientId, patientName, doctorName, time, date } = appointment;
 
-    // Fetch the patient details
     const patient = await Patient.findById(patientId);
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
@@ -71,25 +64,22 @@ module.exports.EmailReminder = async (req, res) => {
 
     const patientEmail = patient.email;
 
-    // Check if a reminder already exists for this appointment
     const existingReminder = await EmailReminder.findOne({ appointmentId: id });
     if (existingReminder) {
       return res.status(400).json({ message: "Reminder already set for this appointment" });
     }
 
-    // Calculate reminder time
     const startTimeString = time.split(" - ")[0];
     const [hours, minutes] = startTimeString.split(":").map(Number);
     let reminderTime = new Date();
-    reminderTime.setHours(hours, minutes - 5, 0, 0);  // Set reminder 5 minutes before the appointment
+    reminderTime.setHours(hours, minutes - 5, 0, 0);  
 
     let appointmentDate = dayjs(date, 'YYYY-MM-DD');
     if (!appointmentDate.isValid()) {
       return res.status(400).json({ message: "Invalid appointment date" });
     }
-    appointmentDate = appointmentDate.toDate();  // Convert appointment date to Date object
+    appointmentDate = appointmentDate.toDate();  
 
-    // Create the reminder
     const newEmailReminder = new EmailReminder({
       appointmentId: id,
       email: patientEmail,
@@ -101,9 +91,8 @@ module.exports.EmailReminder = async (req, res) => {
       reminderTime,
     });
 
-    await newEmailReminder.save();  // Save the reminder
+    await newEmailReminder.save();  
 
-    // You can trigger the reminder service here if necessary
     const reminderTimeString = dayjs(reminderTime).format('HH:mm');
 
     await reminderService.reminderService(
@@ -125,11 +114,11 @@ module.exports.EmailReminder = async (req, res) => {
 
 
 module.exports.cancelReminder = async (req, res) => {
-  const { id } = req.params; // userId
+  const { id } = req.params; 
   const { reminderTime, reminderMessage } = req.body;
 
   try {
-    // Find the reminders by userId and optional filter criteria (time/message)
+
     const reminders = await EmailReminder.find({
       userId: id,
       reminderTime,
@@ -140,7 +129,6 @@ module.exports.cancelReminder = async (req, res) => {
       return res.status(404).json({ message: 'Reminder not found or already cancelled.' });
     }
 
-    // Cancel the scheduled job(s)
     for (let reminder of reminders) {
       if (reminder.jobId && schedule.scheduledJobs[reminder.jobId]) {
         schedule.scheduledJobs[reminder.jobId].cancel();
@@ -149,7 +137,6 @@ module.exports.cancelReminder = async (req, res) => {
         console.log("No scheduled job found for cancellation.");
       }
 
-      // Delete the reminder from the database
       await EmailReminder.findByIdAndDelete(reminder._id);
     }
 

@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-// Schema for the medical report fields
 const patientReportSchema = new mongoose.Schema({
   patientId: {
     type: String,

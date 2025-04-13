@@ -1,4 +1,4 @@
-  //this is the code that handeled the authentication and authorization of the user
+
   const dayjs = require("dayjs");
   const bcrypt = require("bcrypt");
   require("dotenv").config();
@@ -60,7 +60,7 @@
                 return res.status(400).json({ message: "Invalid role provided." });
         }
 
-        const newUser = new RoleModel({ // Use RoleModel to save to the correct collection
+        const newUser = new RoleModel({ 
             name,
             userName,
             email,
@@ -88,7 +88,7 @@ module.exports.verifyEmail = async (req, res) => {
   }
 
   try {
-      // Search for user across all models sequentially
+
       let user = await User.findOne({ email }) ||
                  await Doctor.findOne({ email }) ||
                  await Patient.findOne({ email }) ||
@@ -99,18 +99,15 @@ module.exports.verifyEmail = async (req, res) => {
           return res.status(404).json({ message: `No user found with email ${email}` });
       }
 
-      // Ensure verificationCode comparison is done as a string
       if (String(user.verificationCode) !== String(verificationCode)) {
           console.log(`Mismatch detected for email ${email}: Expected "${String(user.verificationCode)}", received "${String(verificationCode)}"`);
 
-          // Schedule deletion after 5 minutes
           setTimeout(async () => {
               const freshUser = await user.constructor.findOne({ email });
 
               if (freshUser && String(freshUser.verificationCode) !== String(verificationCode) && !freshUser.isVerified) {
                   let RoleModel;
 
-                  // Identify the user role using switch-case
                   switch (freshUser.constructor.modelName) {
                       case "Doctor":
                           RoleModel = Doctor;
@@ -139,7 +136,6 @@ module.exports.verifyEmail = async (req, res) => {
           });
       }
 
-      // Mark the user as verified
       user.isVerified = true;
       user.verificationCode = null;
       await user.save();
@@ -153,12 +149,9 @@ module.exports.verifyEmail = async (req, res) => {
   }
 };
 
-
-  // Helper function to create the role if it doesn't exist
 const createRoleIfNotExist = async (role, user) => {
   let roleInstance;
 
-  // Check for each role type and create if it doesn't exist
   if (role === "doctor") {
     roleInstance = await Doctor.findOne({ email: user.email });
     if (!roleInstance) {
@@ -236,11 +229,10 @@ module.exports.Login = async (req, res) => {
           return res.status(404).json({ message: `No ${role} user found with this email.` });
       }
 
-      // // Debugging logs:
-    //   console.log("Password from request:", password);
-    //   console.log("Hashed password from database:", roleInstance.password);
 
-      if (!roleInstance.password) { // Check if the password exists
+
+
+      if (!roleInstance.password) { 
           console.error("Error: Hashed password is not present in the database for this user.");
           return res.status(500).json({ message: "Internal Server Error: Password not found." });
       }
@@ -253,13 +245,10 @@ module.exports.Login = async (req, res) => {
 
       userData = { _id: roleInstance._id, email: roleInstance.email, role: [role] };
 
-      // Generate JWT tokens with userData
       const { accessToken } = createTokens(userData);
 
-      // Set tokens in cookies
       setTokensInCookies(res, accessToken);
 
-      // Respond with success message and user details
       return res.status(200).json({
           message: `Logged In Successfully as ${userData.role[0].charAt(0).toUpperCase() + userData.role[0].slice(1)}`,
           user: {
