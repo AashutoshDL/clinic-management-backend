@@ -1,32 +1,27 @@
 const Superadmin = require('../../models/superAdminModel');
 const bcrypt = require("bcrypt");
 
-
-// Register Superadmin
 module.exports.superadminRegister = async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        // Check if superadmin already exists
+
         let superadmin = await Superadmin.findOne({ email });
         if (superadmin) {
             return res.status(400).json({ message: 'Superadmin already exists' });
         }
 
-        // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new superadmin
         superadmin = new Superadmin({
             name,
             email,
             password: hashedPassword,
-            role: ['superadmin'],  // Setting the role as superadmin
-            accountCreated: new Date().toISOString(),  // Adding account creation timestamp
+            role: ['superadmin'],  
+            accountCreated: new Date().toISOString(),  
         });
 
-        // Save superadmin to the database
         await superadmin.save();
         return res.status(201).json({ message: 'Superadmin created successfully', superadmin });
     } catch (error) {
@@ -37,7 +32,7 @@ module.exports.superadminRegister = async (req, res) => {
 
 module.exports.getsuperadmins = async (req, res) => {
     try {
-      // Fetch all Superadmins from the database
+
       const superAdmins = await Superadmin.find();
   
       if (!superAdmins.length) {
@@ -51,7 +46,6 @@ module.exports.getsuperadmins = async (req, res) => {
     }
   };
 
-// Delete Superadmin by ID
 module.exports.deleteSuperadminById = async (req, res) => {
     const { id } = req.params;
 

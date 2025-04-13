@@ -1,10 +1,9 @@
-//this is the code that handles the CRUD of the admin by superadmin
+
 const Admin=require('../../models/adminModel');
 const {hashPassword}=require("../../utils/hashPassword");
 const dayjs = require("dayjs");
 const { successResponse, errorResponse, messageResponse } = require('../../utils/responseHandler');
 
-//get admin by Id one by one
 module.exports.getAdminById = async(req,res) =>{
     try{
         const {id}=req.params;
@@ -26,9 +25,8 @@ module.exports.getAdminById = async(req,res) =>{
     }
 };
 
-//create admin
 module.exports.createAdmin=async(req,res) =>{
-    //fetch the data from the body
+
     const {name,email,password}=req.body;
     if(!name||!email||!password){
         return res.status(400).json({message:"All fields are required for admin verification"})
@@ -53,7 +51,6 @@ module.exports.createAdmin=async(req,res) =>{
     }
 };
 
-//delete admin
 module.exports.deleteAdminById=async(req,res)=>{
     const {id} = req.params;
 
@@ -68,10 +65,9 @@ module.exports.deleteAdminById=async(req,res)=>{
     }
 }
 
-//fetches all admins
 module.exports.getAllAdmin = async (req, res) => {
     try {
-      const admins = await Admin.find(); // Fetch all doctors from the database
+      const admins = await Admin.find(); 
   
       if (!admins || admins.length === 0) {
         errorResponse(res, 404, "Admins not found");

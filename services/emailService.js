@@ -6,10 +6,8 @@ module.exports.sendVerificationEmail = async (email) => {
     throw new Error("Email is required");
   }
 
-  // Generate verification code
   const code = Math.floor(100000 + Math.random() * 900000);
 
-  // Create transporter
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -18,7 +16,6 @@ module.exports.sendVerificationEmail = async (email) => {
     },
   });
 
-  // Define email options
   const mailOptions = {
     from: process.env.EMAIL,
     to: email,
@@ -28,7 +25,7 @@ module.exports.sendVerificationEmail = async (email) => {
   };
 
   try {
-    // Send the email
+
     await transporter.sendMail(mailOptions);
     console.log("Verification email sent successfully");
     return code;

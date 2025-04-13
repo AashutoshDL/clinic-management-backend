@@ -3,23 +3,15 @@ const nodemailer = require('nodemailer');
 const EmailReminder = require('../models/reminderModel');
 const Appointment = require('../models/appointmentModel');
 
-// Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD, // Use environment variables for security
+    pass: process.env.EMAIL_PASSWORD, 
   },
 });
 
-/**
- * Schedule and send a reminder email for an appointment at a specific time.
- * @param {string} email - The recipient's email address (doctor or patient).
- * @param {string} doctorName - The doctor's name.
- * @param {string} patientName - The patient's name.
- * @param {string} appointmentTime - The time of the appointment.
- * @param {string} reminderTime - The time in HH:mm format to send the reminder.
- */
+
 const reminderService = async (email, doctorName, patientName, appointmentTime, reminderTime, appointmentId) => {
   if (!email || !doctorName || !patientName || !appointmentTime || !reminderTime) {
     throw new Error("Email, doctor name, patient name, appointment time, and reminder time are required.");
@@ -35,11 +27,10 @@ const reminderService = async (email, doctorName, patientName, appointmentTime, 
     throw new Error('Invalid reminder time format. Hour should be between 0-23 and minute between 0-59.');
   }
 
-  // Schedule the reminder email at the specified time
   const cronExpression = `${minute} ${hour} * * *`;
   schedule.scheduleJob(cronExpression, async () => {
     try {
-      // Send the reminder email
+
       await transporter.sendMail({
         from: process.env.EMAIL,
         to: email,

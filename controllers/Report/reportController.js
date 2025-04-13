@@ -42,31 +42,27 @@ module.exports.updateReportTemplate = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if customFields were provided in the request body for partial update
     if (req.body.customFields && Array.isArray(req.body.customFields)) {
-      // Handle updating specific custom fields based on their _id
+
       for (let i = 0; i < req.body.customFields.length; i++) {
         const fieldUpdate = req.body.customFields[i];
         const { _id, ...updateData } = fieldUpdate;
 
-        // Update only the specific custom field by _id
         await Template.updateOne(
-          { _id: id, 'customFields._id': _id }, // Find template and specific field
+          { _id: id, 'customFields._id': _id }, 
           {
             $set: {
-              'customFields.$': { ...updateData }, // Update the specific field's values
+              'customFields.$': { ...updateData }, 
             },
           }
         );
       }
     }
 
-    // If other fields (like title) need to be updated, handle them separately
     if (req.body.title) {
       await Template.findByIdAndUpdate(id, { title: req.body.title }, { new: true });
     }
 
-    // After updates, retrieve the updated template
     const updatedTemplate = await Template.findById(id);
 
     if (!updatedTemplate) {

@@ -1,4 +1,4 @@
-//autocomplete api for different fields like medicines, disease, condition and procedure
+
 const {errorResponse}= require('../../utils/responseHandler');
 
 module.exports.medicines = async(req,res)=>{
@@ -32,7 +32,7 @@ module.exports.diseases = async (req, res) => {
     const data = await response.json();
 
     const diseases = data[3] || [];
-    const result = diseases.map(d => d[0]); // d is an array like ["Bone cancer"]
+    const result = diseases.map(d => d[0]); 
 
     res.json(result);
   } catch (error) {

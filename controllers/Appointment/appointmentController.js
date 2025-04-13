@@ -26,7 +26,6 @@ module.exports.createAppointment = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    // Verify user role
     const patient = await Patient.findById(id);
     if (!patient) {
       return res.status(403).json({ message: 'Only patients can book an appointment.' });
@@ -36,19 +35,16 @@ module.exports.createAppointment = async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: You can only book for yourself.' });
     }
 
-    // Validate doctor existence
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found.' });
     }
 
-    // Check if the appointment already exists
     const existingAppointment = await Appointment.findOne({ doctorId, patientId, time, date });
     if (existingAppointment) {
       return res.status(400).json({ message: 'You already have an appointment with this doctor at the selected time.' });
     }
 
-    // Create and save the appointment
     const newAppointment = new Appointment({ doctorId, doctorName, patientId, patientName,date, time, status:"Pending" });
     await newAppointment.save();
 
@@ -117,7 +113,6 @@ module.exports.cancelAppointmentById = async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found.' });
     }
 
-    // Update appointment status to "Cancelled"
     appointment.status = "Cancelled";
     await appointment.save();
 

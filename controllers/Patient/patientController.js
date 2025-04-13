@@ -2,7 +2,6 @@ const Patient = require("../../models/patientModel");
 const { messageResponse, errorResponse, successResponse } = require("../../utils/responseHandler");
 const PatientReport = require("../../models/patientReport")
 
-// Fetch patient by ID
 module.exports.getPatientById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -18,7 +17,6 @@ module.exports.getPatientById = async (req, res) => {
   }
 };
 
-// Create a new patient
 module.exports.createPatient = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -36,7 +34,6 @@ module.exports.createPatient = async (req, res) => {
   }
 };
 
-// Delete patient by ID
 module.exports.deletePatientById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -52,7 +49,6 @@ module.exports.deletePatientById = async (req, res) => {
   }
 };
 
-// Fetch all patients
 module.exports.getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find();
@@ -67,13 +63,12 @@ module.exports.createPatientReport = async (req, res) => {
   const { templateTitle, fields, patientId, patientName } = reportData;
 
   try {
-    // Find the patient by ID
+
     const patient = await Patient.findById(patientId);
     if (!patient) {
       return errorResponse(res, 404, "Patient not found");
     }
 
-    // Create a new medical history entry
     const newReport = new PatientReport({
       patientId,
       patientName,
@@ -81,15 +76,12 @@ module.exports.createPatientReport = async (req, res) => {
       fields,
     });
 
-    // Save the new medical history entry
     await newReport.save();
 
-    // Ensure that the medicalHistory array is initialized before pushing
     if (!patient.medicalHistory) {
       patient.medicalHistory = [];
     }
 
-    // Add the new medical history entry to the patient's record
     patient.medicalHistory.push(newReport._id);
     await patient.save();
 
@@ -102,7 +94,7 @@ module.exports.createPatientReport = async (req, res) => {
 
 module.exports.getPatientReportById = async (req, res) => {
   try {
-    const { id } = req.params; // This is the patient ID
+    const { id } = req.params; 
     const reports = await PatientReport.find({ patientId: id });
 
     if (!reports || reports.length === 0) {
