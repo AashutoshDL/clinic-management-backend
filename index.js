@@ -28,7 +28,7 @@ const server = http.createServer(app);
 
 app.use(
   cors({
-    origin: "http:
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -36,8 +36,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 const mode = "development";
-const URL = `mongodb+srv:
-const development_URL = `mongodb:
+const URL = `mongodb+srv://${process.env.DB_User}:${process.env.DB_Password}@pms.7s7kbw4.mongodb.net/PMS?retryWrites=true&w=majority&appName=PMS`;
+const development_URL = `mongodb://127.0.0.1:27017/`;
 
 const connectDB = async () => {
   try {
@@ -70,7 +70,7 @@ app.use('/uploads',pdfUploadRoutes);
 
 const io = new Server(server, {
   cors: {
-    origin: "http:
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
