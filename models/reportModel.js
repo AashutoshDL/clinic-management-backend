@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const customFieldSchema = new mongoose.Schema({
-  label: { type: String, required:true },
-  value: { type: String },
+  label: { type: String, required: true },
+  value: { type: mongoose.Schema.Types.Mixed },
 });
 
 const reportTemplateSchema = new mongoose.Schema({
