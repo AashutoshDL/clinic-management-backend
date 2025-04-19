@@ -117,6 +117,8 @@ module.exports.setupProfileById = async (req, res) => {
             name,
             email,
             userName,
+            age,
+            gender,
             bloodType,
             height,
             heightUnit,
@@ -139,6 +141,8 @@ module.exports.setupProfileById = async (req, res) => {
         patient.name=name || patient.name,
         patient.userName= userName || patient.userName,
         patient.email = email || patient.email,
+        patient.age = age || patient.age,
+        patient.gender = gender || patient.gender,
         patient.bloodType = bloodType || patient.bloodType;
         patient.height = height || patient.height;
         patient.heightUnit = heightUnit || patient.heightUnit;

@@ -20,7 +20,12 @@ const patientSchema = new mongoose.Schema({
   accountCreated: {
     type: String,
   },
-
+  age:{
+    type:Number,
+  },
+  gender:{
+    type:String,
+  },
   bloodType: {
     type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'],
