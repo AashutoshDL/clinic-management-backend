@@ -2,35 +2,53 @@ const schedule = require('node-schedule');
 const nodemailer = require('nodemailer');
 const EmailReminder = require('../models/reminderModel');
 const Appointment = require('../models/appointmentModel');
+const Patient = require('../models/patientModel');
+require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD, 
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
 
-
-const reminderService = async (email, doctorName, patientName, appointmentTime, reminderTime, appointmentId) => {
-  if (!email || !doctorName || !patientName || !appointmentTime || !reminderTime) {
-    throw new Error("Email, doctor name, patient name, appointment time, and reminder time are required.");
+const reminderService = async (appointmentId, reminderTime) => {
+  if (!appointmentId || !reminderTime) {
+    throw new Error("Missing required fields");
   }
 
-  const [hour, minute] = reminderTime.trim().split(':');
-
-  if (
-    isNaN(hour) || isNaN(minute) || 
-    hour < 0 || hour > 23 || 
-    minute < 0 || minute > 59
-  ) {
-    throw new Error('Invalid reminder time format. Hour should be between 0-23 and minute between 0-59.');
+  // Convert reminderTime to a Date object
+  const reminderDate = new Date(reminderTime);
+  if (isNaN(reminderDate)) {
+    throw new Error("Invalid reminder time");
   }
 
-  const cronExpression = `${minute} ${hour} * * *`;
-  schedule.scheduleJob(cronExpression, async () => {
+  // Fetch the appointment details
+  const appointment = await Appointment.findById(appointmentId);
+  if (!appointment) {
+    throw new Error("Appointment not found");
+  }
+
+  const {
+    doctorName,
+    patientName,
+    patientId,
+    time: appointmentTime,
+    date: appointmentDate,
+  } = appointment;
+
+  // Fetch patient email from Patient model
+  const patient = await Patient.findById(patientId);
+  if (!patient) {
+    throw new Error("Patient not found");
+  }
+
+  const email = patient.email;
+
+  // Schedule the reminder email at the correct time
+  schedule.scheduleJob(reminderDate, async () => {
     try {
-
       await transporter.sendMail({
         from: process.env.EMAIL,
         to: email,
@@ -39,32 +57,33 @@ const reminderService = async (email, doctorName, patientName, appointmentTime, 
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.5;">
             <h2>Appointment Reminder</h2>
-            <p>You have an upcoming appointment with <strong>Dr. ${doctorName}</strong> at <strong>${appointmentTime}</strong>.</p>
+            <p>You have an upcoming appointment with <strong>Dr. ${doctorName}</strong> at <strong>${appointmentTime}</strong> on <strong>${appointmentDate}</strong>.</p>
             <p><strong>Patient Name:</strong> ${patientName}</p>
-            <p>This reminder was scheduled for ${reminderTime}.</p>
+            <p>This reminder was sent at ${new Date().toLocaleTimeString()}.</p>
           </div>
         `,
       });
 
-      console.log(`Appointment reminder email sent to ${email} at ${reminderTime}`);
+      console.log(`Reminder email sent to ${email} at ${new Date().toLocaleString()}`);
 
+      // Update reminder status in the EmailReminder model
       const result = await EmailReminder.updateOne(
-        { appointmentId: appointmentId }, 
+        { appointmentId },
         { reminderStatus: 'Sent' }
       );
 
-      if (result.nModified === 0) {
-        console.log(`No reminder found for appointmentId: ${appointmentId}`);
+      if (result.modifiedCount === 0) {
+        console.log(`No reminder found to update for appointmentId: ${appointmentId}`);
       } else {
         console.log(`Reminder status updated for appointmentId: ${appointmentId}`);
       }
 
     } catch (error) {
-      console.error("Error sending email:", error.message);
+      console.error("Error sending email:", error);
     }
   });
 
-  console.log(`Appointment reminder scheduled for ${email} at ${reminderTime}`);
+  console.log(`Reminder scheduled for ${email} at ${reminderDate.toLocaleString()}`);
 };
 
 module.exports = {

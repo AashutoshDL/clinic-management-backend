@@ -5,6 +5,8 @@ const schedule = require('node-schedule');
 const Appointment = require('../models/appointmentModel');
 const dayjs = require('dayjs');
 const mongoose = require('mongoose');
+const nodemailer = require('nodemailer');
+
 
 module.exports.getAllReminders = async (req, res) => {
   try {
@@ -69,16 +71,19 @@ module.exports.EmailReminder = async (req, res) => {
       return res.status(400).json({ message: "Reminder already set for this appointment" });
     }
 
-    const startTimeString = time.split(" - ")[0];
-    const [hours, minutes] = startTimeString.split(":").map(Number);
-    let reminderTime = new Date();
-    reminderTime.setHours(hours, minutes - 5, 0, 0);  
-
+    
     let appointmentDate = dayjs(date, 'YYYY-MM-DD');
     if (!appointmentDate.isValid()) {
       return res.status(400).json({ message: "Invalid appointment date" });
     }
     appointmentDate = appointmentDate.toDate();  
+    
+    const startTimeString = time.split(" - ")[0];
+    const [hours, minutes] = startTimeString.split(":").map(Number);
+    const reminderTime = new Date(appointmentDate);
+    reminderTime.setHours(hours, minutes + 5, 0, 0);  
+
+    console.log("Reminder time",reminderTime)
 
     const newEmailReminder = new EmailReminder({
       appointmentId: id,
@@ -87,24 +92,19 @@ module.exports.EmailReminder = async (req, res) => {
       appointmentDate,
       appointmentTime: time,
       patientName,
-      patientId: patientId,
+      patientId,
       reminderTime,
     });
 
-    await newEmailReminder.save();  
-
-    const reminderTimeString = dayjs(reminderTime).format('HH:mm');
-
+    await newEmailReminder.save();
+    
+    console.log(reminderTime)
     await reminderService.reminderService(
-      patientEmail, 
-      doctorName, 
-      patientName, 
-      time, 
-      reminderTimeString,
-      id
+      id,
+      reminderTime
     );
 
-    res.json({ message: "Reminder set successfully", reminderTime: reminderTimeString });
+    res.json({ message: "Reminder set successfully", reminderTime});
     
   } catch (error) {
     console.error("Error setting email reminder:", error);
@@ -144,5 +144,53 @@ module.exports.cancelReminder = async (req, res) => {
   } catch (error) {
     console.error('Error canceling reminder:', error);
     return res.status(500).json({ message: 'Failed to cancel reminder.' });
+  }
+};
+
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
+
+module.exports.testEmail = async (req, res) => {
+  try {
+    const { to } = req.body;
+
+    if (!to) {
+      return res.status(400).json({ message: "Recipient email ('to') is required." });
+    }
+
+    const sendTime = new Date(Date.now() + 60000); // 1 minute from now
+
+    schedule.scheduleJob(sendTime, async () => {
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL,
+          to,
+          subject: '🔔 Test Appointment Reminder',
+          html: `
+            <h2>Test Email Reminder</h2>
+            <p>This is a <strong>test email</strong> scheduled at ${new Date().toLocaleString()}.</p>
+            <p>If you're reading this, scheduling works!</p>
+          `,
+        });
+
+        console.log(`✅ Test email sent to ${to} at ${new Date().toLocaleString()}`);
+      } catch (err) {
+        console.error("❌ Error sending test email:", err);
+      }
+    });
+
+    res.json({
+      message: `✅ Test email scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
+    });
+
+  } catch (error) {
+    console.error("❌ Error in testEmail:", error);
+    res.status(500).json({ message: "Server error in test email" });
   }
 };
