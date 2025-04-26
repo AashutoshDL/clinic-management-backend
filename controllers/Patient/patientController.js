@@ -111,54 +111,53 @@ module.exports.getPatientReportById = async (req, res) => {
 
 
 module.exports.setupProfileById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const {
-            name,
-            email,
-            userName,
-            age,
-            gender,
-            bloodType,
-            height,
-            heightUnit,
-            weight,
-            weightUnit,
-            systolicBP,
-            diastolicBP,
-            heartRate,
-            temperature,
-            temperatureUnit,
-            bloodGlucose
-        } = req.body;
+  try {
+    const { id } = req.params;
 
-        const patient = await Patient.findById(id);
-
-        if (!patient) {
-            return messageResponse(res, 404, "Patient Not Found");
-        }
-
-        patient.name=name || patient.name,
-        patient.userName= userName || patient.userName,
-        patient.email = email || patient.email,
-        patient.age = age || patient.age,
-        patient.gender = gender || patient.gender,
-        patient.bloodType = bloodType || patient.bloodType;
-        patient.height = height || patient.height;
-        patient.heightUnit = heightUnit || patient.heightUnit;
-        patient.weight = weight || patient.weight;
-        patient.weightUnit = weightUnit || patient.weightUnit;
-        patient.systolicBP = systolicBP || patient.systolicBP;
-        patient.diastolicBP = diastolicBP || patient.diastolicBP;
-        patient.heartRate = heartRate || patient.heartRate;
-        patient.temperature = temperature || patient.temperature;
-        patient.temperatureUnit = temperatureUnit || patient.temperatureUnit;
-        patient.bloodGlucose = bloodGlucose || patient.bloodGlucose;
-
-        await patient.save();
-
-        return successResponse(res, 200, "Profile updated successfully", patient);
-    } catch (error) {
-        return errorResponse(res, 500, "Internal Server Error", error);
+    const patient = await Patient.findById(id);
+    if (!patient) {
+      return messageResponse(res, 404, "Patient Not Found");
     }
+
+    // Prepare all updatable fields
+    const updateFields = {
+      name: req.body.name,
+      email: req.body.email,
+      userName: req.body.userName,
+      age: req.body.age,
+      gender: req.body.gender,
+      bloodType: req.body.bloodType,
+      height: req.body.height,
+      heightUnit: req.body.heightUnit,
+      weight: req.body.weight,
+      weightUnit: req.body.weightUnit,
+      systolicBP: req.body.systolicBP,
+      diastolicBP: req.body.diastolicBP,
+      heartRate: req.body.heartRate,
+      temperature: req.body.temperature,
+      temperatureUnit: req.body.temperatureUnit,
+      bloodGlucose: req.body.bloodGlucose,
+    };
+
+    // If a new image is uploaded, update profileImage
+    if (req.file && req.file.path) {
+      updateFields.profileImage = req.file.path;
+    } else if (req.body.profileImage) {
+      updateFields.profileImage = req.body.profileImage;
+    }
+
+    // Dynamically update only provided fields
+    Object.keys(updateFields).forEach((key) => {
+      if (updateFields[key] !== undefined) {
+        patient[key] = updateFields[key];
+      }
+    });
+
+    await patient.save();
+
+    return successResponse(res, 200, "Profile updated successfully", patient);
+  } catch (error) {
+    console.error('Update Profile Error:', error);
+    return errorResponse(res, 500, "Internal Server Error", error);
+  }
 };

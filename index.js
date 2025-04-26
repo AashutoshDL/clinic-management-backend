@@ -20,6 +20,7 @@ const autoCompleteRoutes = require("./routes/autoCompleteRoutes");
 const messageRoutes=require("./routes/messageRoutes");
 const patientHistoryRoutes = require("./routes/patientHistoryRoutes");
 const pdfUploadRoutes=require('./routes/pdfUploadRoutes');
+const {reschedulePendingReminders} = require("./services/reminderService");
 
 const { authenticateToken } = require("./tokens/authenticateToken");
 
@@ -49,6 +50,7 @@ const connectDB = async () => {
   }
 };
 connectDB();
+reschedulePendingReminders(); // calling the function to resinitiate any reminders that could be stopped
 
 app.get("/me", authenticateToken, (req, res) => {
   const { id, role } = req.user;

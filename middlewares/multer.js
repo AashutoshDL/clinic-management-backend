@@ -10,7 +10,18 @@
             resource_type:'raw',
         }
     });
-
+    
     const upload= multer({storage});
 
-    module.exports=upload;
+    const imageStorage= new CloudinaryStorage({
+        cloudinary,
+        params:{
+            folder:"patient_images",
+            allowed_formats:['jpg','png','jpeg'],
+            resource_type:'image',
+        }
+    });
+    const uploadImage= multer({storage:imageStorage});
+
+
+    module.exports={upload,uploadImage};

@@ -18,36 +18,17 @@ const reminderService = async (appointmentId, reminderTime) => {
     throw new Error("Missing required fields");
   }
 
-  // Convert reminderTime to a Date object
-  const reminderDate = new Date(reminderTime);
-  if (isNaN(reminderDate)) {
-    throw new Error("Invalid reminder time");
-  }
-
-  // Fetch the appointment details
   const appointment = await Appointment.findById(appointmentId);
-  if (!appointment) {
-    throw new Error("Appointment not found");
-  }
+  if (!appointment) throw new Error("Appointment not found");
 
-  const {
-    doctorName,
-    patientName,
-    patientId,
-    time: appointmentTime,
-    date: appointmentDate,
-  } = appointment;
+  const { doctorName, patientName, patientId, time: appointmentTime, date: appointmentDate } = appointment;
 
-  // Fetch patient email from Patient model
   const patient = await Patient.findById(patientId);
-  if (!patient) {
-    throw new Error("Patient not found");
-  }
+  if (!patient) throw new Error("Patient not found");
 
   const email = patient.email;
 
-  // Schedule the reminder email at the correct time
-  schedule.scheduleJob(reminderDate, async () => {
+  schedule.scheduleJob(reminderTime, async () => {
     try {
       await transporter.sendMail({
         from: process.env.EMAIL,
@@ -66,7 +47,6 @@ const reminderService = async (appointmentId, reminderTime) => {
 
       console.log(`Reminder email sent to ${email} at ${new Date().toLocaleString()}`);
 
-      // Update reminder status in the EmailReminder model
       const result = await EmailReminder.updateOne(
         { appointmentId },
         { reminderStatus: 'Sent' }
@@ -83,9 +63,29 @@ const reminderService = async (appointmentId, reminderTime) => {
     }
   });
 
-  console.log(`Reminder scheduled for ${email} at ${reminderDate.toLocaleString()}`);
+  console.log(`Reminder scheduled for ${email} at ${reminderTime.toLocaleString()}`);
+};
+
+const reschedulePendingReminders = async () => {
+  try {
+    const now = new Date();
+
+    const pendingReminders = await EmailReminder.find({
+      reminderStatus: 'Pending',
+      reminderTime: { $gte: now },
+    });
+
+    console.log(`Found ${pendingReminders.length} pending reminders to reschedule.`);
+
+    for (const reminder of pendingReminders) {
+      await reminderService(reminder.appointmentId, reminder.reminderTime);
+    }
+  } catch (err) {
+    console.error('Error rescheduling pending reminders:', err);
+  }
 };
 
 module.exports = {
   reminderService,
+  reschedulePendingReminders,
 };

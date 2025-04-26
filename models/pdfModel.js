@@ -18,6 +18,10 @@ const pdfSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  summary : {
+    type: String,
+    default: null,
+  },
   fileSize: {
     type: Number,
     required: true,

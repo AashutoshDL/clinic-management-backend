@@ -148,49 +148,49 @@ module.exports.cancelReminder = async (req, res) => {
 };
 
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   auth: {
+//     user: process.env.EMAIL,
+//     pass: process.env.EMAIL_PASSWORD,
+//   },
+// });
 
-module.exports.testEmail = async (req, res) => {
-  try {
-    const { to } = req.body;
+// module.exports.testEmail = async (req, res) => {
+//   try {
+//     const { to } = req.body;
 
-    if (!to) {
-      return res.status(400).json({ message: "Recipient email ('to') is required." });
-    }
+//     if (!to) {
+//       return res.status(400).json({ message: "Recipient email ('to') is required." });
+//     }
 
-    const sendTime = new Date(Date.now() + 60000); // 1 minute from now
+//     const sendTime = new Date(Date.now() + 60000); // 1 minute from now
 
-    schedule.scheduleJob(sendTime, async () => {
-      try {
-        await transporter.sendMail({
-          from: process.env.EMAIL,
-          to,
-          subject: '🔔 Test Appointment Reminder',
-          html: `
-            <h2>Test Email Reminder</h2>
-            <p>This is a <strong>test email</strong> scheduled at ${new Date().toLocaleString()}.</p>
-            <p>If you're reading this, scheduling works!</p>
-          `,
-        });
+//     schedule.scheduleJob(sendTime, async () => {
+//       try {
+//         await transporter.sendMail({
+//           from: process.env.EMAIL,
+//           to,
+//           subject: '🔔 Test Appointment Reminder',
+//           html: `
+//             <h2>Test Email Reminder</h2>
+//             <p>This is a <strong>test email</strong> scheduled at ${new Date().toLocaleString()}.</p>
+//             <p>If you're reading this, scheduling works!</p>
+//           `,
+//         });
 
-        console.log(`✅ Test email sent to ${to} at ${new Date().toLocaleString()}`);
-      } catch (err) {
-        console.error("❌ Error sending test email:", err);
-      }
-    });
+//         console.log(`✅ Test email sent to ${to} at ${new Date().toLocaleString()}`);
+//       } catch (err) {
+//         console.error("❌ Error sending test email:", err);
+//       }
+//     });
 
-    res.json({
-      message: `✅ Test email scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
-    });
+//     res.json({
+//       message: `✅ Test email scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
+//     });
 
-  } catch (error) {
-    console.error("❌ Error in testEmail:", error);
-    res.status(500).json({ message: "Server error in test email" });
-  }
-};
+//   } catch (error) {
+//     console.error("❌ Error in testEmail:", error);
+//     res.status(500).json({ message: "Server error in test email" });
+//   }
+// };  
