@@ -73,6 +73,9 @@ const patientSchema = new mongoose.Schema({
   },
   verificationCode:{
     type:String,
+  },
+  sharedEmails:{
+    type:[String],
   }
 });
 
