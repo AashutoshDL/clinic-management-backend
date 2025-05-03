@@ -139,6 +139,10 @@ module.exports.setupProfileById = async (req, res) => {
       bloodGlucose: req.body.bloodGlucose,
     };
 
+    if (req.body.sharedEmails && Array.isArray(req.body.sharedEmails)) {
+      updateFields.sharedEmails = req.body.sharedEmails;
+    }
+
     // If a new image is uploaded, update profileImage
     if (req.file && req.file.path) {
       updateFields.profileImage = req.file.path;
