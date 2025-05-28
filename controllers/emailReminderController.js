@@ -147,50 +147,167 @@ module.exports.cancelReminder = async (req, res) => {
   }
 };
 
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
 
-// const transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   auth: {
-//     user: process.env.EMAIL,
-//     pass: process.env.EMAIL_PASSWORD,
-//   },
-// });
+module.exports.testEmail = async (req, res) => {
+  try {
+    const { to } = req.body;
 
-// module.exports.testEmail = async (req, res) => {
-//   try {
-//     const { to } = req.body;
+    if (!to) {
+      return res.status(400).json({ message: "Recipient email ('to') is required." });
+    }
 
-//     if (!to) {
-//       return res.status(400).json({ message: "Recipient email ('to') is required." });
-//     }
+    const sendTime = new Date(Date.now() + 60000); // 1 minute from now
 
-//     const sendTime = new Date(Date.now() + 60000); // 1 minute from now
+    schedule.scheduleJob(sendTime, async () => {
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL,
+          to,
+          subject: '🏥 Medisys',
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Medisys</title>
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="margin: 0; font-size: 28px;">🏥 MediSys Changathali</h1>
+                <p style="margin: 10px 0 0 0; font-size: 16px;">Better Healthcare. Closer to You.</p>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+                  <p><strong>Dear Patient,</strong></p>
+                  <p>This is a <strong>test notification</strong> from our automated appointment reminder system.</p>
+                  <p><strong>Test Details:</strong></p>
+                  <ul style="margin: 15px 0;">
+                    <li>📅 Scheduled at: ${new Date().toLocaleString()}</li>
+                    <li>✅ Email delivery: Successful</li>
+                    <li>🔧 System status: Operational</li>
+                  </ul>
+                </div>
 
-//     schedule.scheduleJob(sendTime, async () => {
-//       try {
-//         await transporter.sendMail({
-//           from: process.env.EMAIL,
-//           to,
-//           subject: '🔔 Test Appointment Reminder',
-//           html: `
-//             <h2>Test Email Reminder</h2>
-//             <p>This is a <strong>test email</strong> scheduled at ${new Date().toLocaleString()}.</p>
-//             <p>If you're reading this, scheduling works!</p>
-//           `,
-//         });
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                  <p style="margin: 0; font-size: 14px; color: #6c757d;">
+                    <strong>Medisys Changathali</strong><br>
+                    📍 Changathali, Mahalaxmi Municipality, Lalitpur, Nepal<br>
+                    📞 +977 9803133855 | 📧 contact@medisysclinic.com
+                  </p>
+                </div>
 
-//         console.log(`✅ Test email sent to ${to} at ${new Date().toLocaleString()}`);
-//       } catch (err) {
-//         console.error("❌ Error sending test email:", err);
-//       }
-//     });
+                <div style="text-align: center; margin-top: 20px;">
+                  <p style="font-size: 12px; color: #868e96;">
+                    This is an automated test message from MediSys Clinic's appointment system.<br>
+                    Please do not reply to this email.
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `,
+        });
 
-//     res.json({
-//       message: `✅ Test email scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
-//     });
+        console.log(`✅ Test email sent to ${to} at ${new Date().toLocaleString()}`);
+      } catch (err) {
+        console.error("❌ Error sending test email:", err);
+      }
+    });
 
-//   } catch (error) {
-//     console.error("❌ Error in testEmail:", error);
-//     res.status(500).json({ message: "Server error in test email" });
-//   }
-// };  
+    res.json({
+      message: `✅ Test email scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
+    });
+  } catch (error) {
+    console.error("❌ Error in testEmail:", error);
+    res.status(500).json({ message: "Server error in test email" });
+  }
+};
+
+
+const PDFDocument = require('pdfkit');
+const { Readable } = require('stream');
+
+module.exports.testInvoice = async (req, res) => {
+  try {
+    const { to, items = [], totalAmount = 0 } = req.body;
+
+    if (!to) {
+      return res.status(400).json({ message: "Recipient email ('to') is required." });
+    }
+
+    const sendTime = new Date(Date.now() + 60000); // 1 minute from now
+
+    schedule.scheduleJob(sendTime, async () => {
+      try {
+        // Generate PDF invoice
+        const doc = new PDFDocument();
+        const buffers = [];
+
+        doc.on('data', buffers.push.bind(buffers));
+        doc.on('end', async () => {
+          const pdfData = Buffer.concat(buffers);
+
+          await transporter.sendMail({
+            from: process.env.EMAIL,
+            to,
+            subject: '🧾 Medisys Invoice - Medicine Billing',
+            text: 'Please find attached your medicine bill from Medisys Changathali, Lalitpur.',
+            attachments: [
+              {
+                filename: `invoice-${Date.now()}.pdf`,
+                content: pdfData,
+              },
+            ],
+          });
+
+          console.log(`✅ Invoice email sent to ${to} at ${new Date().toLocaleString()}`);
+        });
+
+        // PDF Content
+        doc.fontSize(20).text('Medisys Changathali, Lalitpur', { align: 'center' });
+        doc.moveDown();
+        doc.fontSize(16).text('Medicine Invoice');
+        doc.moveDown();
+
+        const dateStr = new Date().toLocaleString();
+        doc.fontSize(12).text(`Date: ${dateStr}`);
+        doc.moveDown();
+
+        if (items.length > 0) {
+          doc.text('Medicines:');
+          items.forEach((item, index) => {
+            doc.text(`${index + 1}. ${item.name} - Qty: ${item.qty} - Price: Rs. ${item.price}`);
+          });
+          doc.moveDown();
+          doc.fontSize(14).text(`Total Amount: Rs. ${totalAmount}`, { underline: true });
+        } else {
+          doc.text('No medicine items provided.');
+        }
+
+        doc.moveDown();
+        doc.fontSize(10).text('Thank you for trusting Medisys. Stay healthy!');
+
+        doc.end(); // Finalize PDF generation
+      } catch (err) {
+        console.error("❌ Error sending invoice email:", err);
+      }
+    });
+
+    res.json({
+      message: `✅ Medicine invoice scheduled to be sent to ${to} at ${sendTime.toLocaleTimeString()}`,
+    });
+  } catch (error) {
+    console.error("❌ Error in testInvoice:", error);
+    res.status(500).json({ message: "Server error in invoice email" });
+  }
+};
