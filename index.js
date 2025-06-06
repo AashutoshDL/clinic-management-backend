@@ -70,6 +70,26 @@ app.use("/auto", autoCompleteRoutes);
 app.use("/chat",messageRoutes);
 app.use('/uploads',pdfUploadRoutes);
 
+const Stripe = require('stripe');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+
+app.post('/payment' , async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: 'usd',
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
